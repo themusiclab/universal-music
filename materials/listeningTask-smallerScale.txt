@@ -1,0 +1,3612 @@
+'--------------------------------------------------------------------------
+' Instance Declarations
+'--------------------------------------------------------------------------
+Dim Display As DisplayDevice
+Dim DisplayEchoClients As DisplayDeviceEchoClientManager
+Dim DisplayEchoClient As DisplayDeviceEchoClient
+Dim Keyboard As KeyboardDevice
+Dim Sound As SoundDevice
+Dim SessionProc As Procedure
+Dim SessionProc_nObject As Long
+Dim SessionProc_bCanExit As Boolean
+Dim SessionProc_theCollection As RteCollection
+Dim SessionProc_theInputObject As RteRunnableInputObject
+
+' List Attribute Constants
+Const attrib_weight = ebUCase_W & ebLCase_e & ebLCase_i & ebLCase_g & ebLCase_h & ebLCase_t
+Const attrib_nested = ebUCase_N & ebLCase_e & ebLCase_s & ebLCase_t & ebLCase_e & ebLCase_d
+Const attrib_procedure = ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_c & ebLCase_e & ebLCase_d & ebLCase_u & ebLCase_r & ebLCase_e
+Const attrib_cond = ebLCase_c & ebLCase_o & ebLCase_n & ebLCase_d
+Const attrib_text1 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1
+Const attrib_text2 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_2
+Const attrib_text3 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3
+Const attrib_text4 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_4
+Const attrib_text4a = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_4 & ebLCase_a
+Const attrib_text4b = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_4 & ebLCase_b
+Const attrib_text5 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_5
+Const attrib_text6 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_6
+Const attrib_text7 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_7
+Const attrib_text8 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_8
+Const attrib_text9 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_9
+Const attrib_text10 = ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1 & ebDigit_0
+Const attrib_songfile = ebLCase_s & ebLCase_o & ebLCase_n & ebLCase_g & ebLCase_f & ebLCase_i & ebLCase_l & ebLCase_e
+Const attrib_type = ebLCase_t & ebLCase_y & ebLCase_p & ebLCase_e
+Const attrib_excerpt = ebLCase_e & ebLCase_x & ebLCase_c & ebLCase_e & ebLCase_r & ebLCase_p & ebLCase_t
+Const attrib_genre = ebLCase_g & ebLCase_e & ebLCase_n & ebLCase_r & ebLCase_e
+Const attrib_englishq = ebLCase_e & ebLCase_n & ebLCase_g & ebLCase_l & ebLCase_i & ebLCase_s & ebLCase_h & ebUCase_Q
+Const attrib_translatedq = ebLCase_t & ebLCase_r & ebLCase_a & ebLCase_n & ebLCase_s & ebLCase_l & ebLCase_a & ebLCase_t & ebLCase_e & ebLCase_d & ebUCase_Q
+Const attrib_englishqabv = ebLCase_e & ebLCase_n & ebLCase_g & ebLCase_l & ebLCase_i & ebLCase_s & ebLCase_h & ebUCase_Q & ebLCase_a & ebLCase_b & ebLCase_v
+Const attrib_translatedqabv = ebLCase_t & ebLCase_r & ebLCase_a & ebLCase_n & ebLCase_s & ebLCase_l & ebLCase_a & ebLCase_t & ebLCase_e & ebLCase_d & ebUCase_Q & ebLCase_a & ebLCase_b & ebLCase_v
+
+Dim ListeningTask As List
+
+Dim LTproc As Procedure
+Dim LTproc_nObject As Long
+Dim LTproc_bCanExit As Boolean
+Dim LTproc_theCollection As RteCollection
+Dim LTproc_theInputObject As RteRunnableInputObject
+
+Dim IntroInstructions1 As Slide
+Dim IntroInstructions1EchoClients As EchoClientCollection
+Dim IntroInstructions1_State As SlideState
+Dim IntroInstructions1_SlideText As SlideText
+
+Dim IntroInstructions2 As Slide
+Dim IntroInstructions2EchoClients As EchoClientCollection
+Dim IntroInstructions2_State As SlideState
+Dim IntroInstructions2_SlideText As SlideText
+
+Dim IntroInstructions3 As Slide
+Dim IntroInstructions3EchoClients As EchoClientCollection
+Dim IntroInstructions3_State As SlideState
+Dim IntroInstructions3_SlideText As SlideText
+
+Dim IntroInstructions4 As Slide
+Dim IntroInstructions4EchoClients As EchoClientCollection
+Dim IntroInstructions4_State As SlideState
+Dim IntroInstructions4_SlideText As SlideText
+
+Dim IntroInstructions7 As Slide
+Dim IntroInstructions7EchoClients As EchoClientCollection
+Dim IntroInstructions7_State As SlideState
+Dim IntroInstructions7_SlideText As SlideText
+
+Dim PracticeNaiv As List
+
+Dim raw As List
+
+Dim naivProc As Procedure
+Dim naivProc_nObject As Long
+Dim naivProc_bCanExit As Boolean
+Dim naivProc_theCollection As RteCollection
+Dim naivProc_theInputObject As RteRunnableInputObject
+
+Dim PracticeTrackInst As Slide
+Dim PracticeTrackInstEchoClients As EchoClientCollection
+Dim PracticeTrackInst_State As SlideState
+Dim PracticeTrackInst_SlideText As SlideText
+
+Dim PlayTrack As Slide
+Dim PlayTrackEchoClients As EchoClientCollection
+Dim PlayTrack_State As SlideState
+Dim PlayTrack_SlideText As SlideText
+Dim PlayTrack_SlideSoundOut As SlideSoundOut
+Dim PlayTrack_SoundBuffer As SoundBuffer
+Dim PlayTrack_SoundBufferInfo As SoundBufferInfo
+
+Dim PracticeQInst As Slide
+Dim PracticeQInstEchoClients As EchoClientCollection
+Dim PracticeQInst_State As SlideState
+Dim PracticeQInst_SlideText As SlideText
+
+Dim naivQs As List
+
+Dim naivQproc As Procedure
+Dim naivQproc_nObject As Long
+Dim naivQproc_bCanExit As Boolean
+Dim naivQproc_theCollection As RteCollection
+Dim naivQproc_theInputObject As RteRunnableInputObject
+
+Dim naivQ As Slide
+Dim naivQEchoClients As EchoClientCollection
+Dim naivQ_State As SlideState
+Dim naivQ_SlideText As SlideText
+
+Dim naivQnote As TextDisplay
+Dim naivQnoteEchoClients As EchoClientCollection
+
+Dim PracticeQPostInst As Slide
+Dim PracticeQPostInstEchoClients As EchoClientCollection
+Dim PracticeQPostInst_State As SlideState
+Dim PracticeQPostInst_SlideText As SlideText
+
+Dim naiv As List
+
+Dim practiceRaw As List
+
+Dim PracProc As Procedure
+Dim PracProc_nObject As Long
+Dim PracProc_bCanExit As Boolean
+Dim PracProc_theCollection As RteCollection
+Dim PracProc_theInputObject As RteRunnableInputObject
+
+Dim naivPracQs As List
+
+Dim PracQproc As Procedure
+Dim PracQproc_nObject As Long
+Dim PracQproc_bCanExit As Boolean
+Dim PracQproc_theCollection As RteCollection
+Dim PracQproc_theInputObject As RteRunnableInputObject
+
+Dim PracQ As Slide
+Dim PracQEchoClients As EchoClientCollection
+Dim PracQ_State As SlideState
+Dim PracQ_SlideText As SlideText
+
+Dim flute As List
+
+Dim ReadyToPlay As TextDisplay
+Dim ReadyToPlayEchoClients As EchoClientCollection
+
+Dim naivQfree As TextDisplay
+Dim naivQfreeEchoClients As EchoClientCollection
+
+Dim IntroInstructions5 As Slide
+Dim IntroInstructions5EchoClients As EchoClientCollection
+Dim IntroInstructions5_State As SlideState
+Dim IntroInstructions5_SlideText As SlideText
+
+Dim IntroInstructions6 As Slide
+Dim IntroInstructions6EchoClients As EchoClientCollection
+Dim IntroInstructions6_State As SlideState
+Dim IntroInstructions6_SlideText As SlideText
+
+Dim practiceSynth As List
+
+Dim EndTrack As TextDisplay
+Dim EndTrackEchoClients As EchoClientCollection
+
+Dim StartNaiv As TextDisplay
+Dim StartNaivEchoClients As EchoClientCollection
+
+Dim RecheckButtonComp As Slide
+Dim RecheckButtonCompEchoClients As EchoClientCollection
+Dim RecheckButtonComp_State As SlideState
+Dim RecheckButtonComp_SlideText As SlideText
+
+
+
+'--------------------------------------------------------------------------
+' Package Declare Script
+'--------------------------------------------------------------------------
+
+
+
+'--------------------------------------------------------------------------
+' User Script - BEGIN
+'--------------------------------------------------------------------------
+
+
+'--------------------------------------------------------------------------
+' User Script - END
+'--------------------------------------------------------------------------
+
+
+
+'--------------------------------------------------------------------------
+' Package Global Script
+'--------------------------------------------------------------------------
+
+
+
+'--------------------------------------------------------------------------
+' Implementation
+'--------------------------------------------------------------------------
+Sub SessionProc_Run(c as Context)
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - InLine2 BEGIN <InLine2>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	Select Case c.GetAttrib("Group")
+	Case "Mentawi"
+		ListeningTask.setAttrib 1, "text1", "Anai ekeu pasiarrep musik. Anai parerekat tentang senin urai. Ke tak maoba ekeu pasiwawancarai, tak anai kudnia. Ke maoba pasiarrep, arrep."
+		ListeningTask.setAttrib 2, "text1", "Anai ekeu pasiarrep musik. Anai parerekat tentang senin musik. Ke tak maoba ekeu pasiwawancarai, tak anai kudnia. Ke maoba pasiarrep, arrep."
+		ListeningTask.setAttrib 1, "text2", "Wawancarai nane sekitar 20nga menit. Ke anai parekekatnu, parere."
+		ListeningTask.setAttrib 2, "text2", "Wawancarai nane sekitar 20nga menit. Ke anai parekekatnu, parere."
+		ListeningTask.setAttrib 1, "text3", "Elek maoba ekeu wawancarai?"
+		ListeningTask.setAttrib 2, "text3", "Elek maoba ekeu wawancarai?"
+		ListeningTask.setAttrib 1, "text4", "Oto, sosoa, anai ekeu pasiarrep urai siboito. Ponia kolonia, ukolo-ake. Pasikatnia, uarrep urai. Arrep, arrep, arrep, lepa -- anai aku parere, menurut ekeu, alek urai nane untuk pasiboirok toga? Ukua oh-oh, ale oh oh, tapoi boiro, ale tak. Lepa eda, ku rere meja, siki, alek urai nane untuk pabetei? Sikine sikine sikine."
+		ListeningTask.setAttrib 2, "text4", "Oto, sosoa, anai ekeu pasiarrep musik siboito. Ponia kolonia, ukolo-ake. Pasikatnia, uarrep musik. Arrep, arrep, arrep, lepa -- anai aku parere, menurut ekeu, alek musik nane untuk pasiboirok toga? Ukua oh-oh, ale oh oh, tapoi boiro, ale tak. Lepa eda, ku rere meja, siki, alek urai nane untuk pabetei? Sikine sikine sikine."
+		ListeningTask.setAttrib 1, "text4a", "Kapa ia 'boirok'? Kapa ia 'oh-oh'? Kapa ia 'tak'?"
+		ListeningTask.setAttrib 2, "text4a", "Kapa ia 'boirok'? Kapa ia 'oh-oh'? Kapa ia 'tak'?"
+		ListeningTask.setAttrib 1, "text4b", "Durut urainane dabara ka pulagajat bage, siki Jepang, India, German, Amerika. Biasania, tak tuguruk ka patuatta ngangada, tapoi tak anai kudnia eda. Arrep gayania -- ponoilo da urai-ake urai nane? Siki, alek makere urai pasiboirok alek urai siputarian alek urai pabetei, sikine sikine."
+		ListeningTask.setAttrib 2, "text4b", "Durut musik nane ibara ka pulagajat bage. Mabeda le, tapoi tak anai kudnia eda. Arrep gayania -- ponoilo dakut musik  nane? Siki, alek makere urai pasiboirok alek urai siputarian alek urai pabetei, sikine sikine."
+		ListeningTask.setAttrib 1, "text5", "Ke tak uagai, tak anai kudnia. Sibbo.  Ke tak uarrep, kua. Siki: 'Alek, tak ku arrep, ale.'  Ke anai urai simasusa, elek tak ugai, moi e ka urai meja."
+		ListeningTask.setAttrib 2, "text5", "Ke tak uagai, tak anai kudnia. Sibbo.  Ke tak uarrep, kua. Siki: 'Alek, tak ku arrep, ale.'  Ke anai musik simasusa, elek tak ugai, moi e ka urai meja."
+		ListeningTask.setAttrib 1, "text6", "Ta sibo boiki."
+		ListeningTask.setAttrib 2, "text6", "Ta sibo boiki."
+		ListeningTask.setAttrib 1, "text7", "-"
+		ListeningTask.setAttrib 2, "text7", "-"
+		ListeningTask.setAttrib 1, "text8", "-"
+		ListeningTask.setAttrib 2, "text8", "-"
+		ListeningTask.setAttrib 1, "text9", "-"
+		ListeningTask.setAttrib 2, "text9", "-"
+		ListeningTask.setAttrib 1, "text10", "Kapa ia 'boirok'? Kapa ia 'oh-oh'? Kapa ia 'tak'?"
+		ListeningTask.setAttrib 2, "text10", "Kapa ia 'boirok'? Kapa ia 'oh-oh'? Kapa ia 'tak'?"
+		naivPracQs.setAttrib 1, "translatedQ", "Menurut ekeu, alek urai nane untuk utarian?"
+		naivPracQs.setAttrib 2, "translatedQ", "Menurut ekeu, alek urai nane untuk pabetei?"
+		naivPracQs.setAttrib 3, "translatedQ", "Menurut ekeu, alek urai nane untuk pasiboiro toga?"
+		naivPracQs.setAttrib 4, "translatedQ", "Menurut ekeu, alek urai nane urai paobakat?"
+		naivPracQs.setAttrib 5, "translatedQ", "Menurut ekeu, alek urai nane untuk usou simamatei?"
+		naivPracQs.setAttrib 6, "translatedQ", "Menurut ekeu, alek urai nane untuk pasigobui titiboat?"
+		naivPracQs.setAttrib 7, "translatedQ", "Menurut ekeu, alek urai untuk pasihibur tamu?"
+		naivPracQs.setAttrib 8, "translatedQ", "Menurut ekeu, alek urai nane untuk pasinilai sirimanua?"
+		naivQs.setAttrib 1, "translatedQ", "Menurut ekeu, alek urai nane untuk utarian?"
+		naivQs.setAttrib 2, "translatedQ", "Menurut ekeu, alek urai nane untuk pabetei?"
+		naivQs.setAttrib 3, "translatedQ", "Menurut ekeu, alek urai nane untuk pasiboiro toga?"
+		naivQs.setAttrib 4, "translatedQ", "Menurut ekeu, alek urai nane urai paobakat?"
+		naivQs.setAttrib 5, "translatedQ", "Menurut ekeu, alek urai nane untuk usou simamatei?"
+		naivQs.setAttrib 6, "translatedQ", "Menurut ekeu, alek urai nane untuk pasigobui titiboat?"
+		naivQs.setAttrib 7, "translatedQ", "Menurut ekeu, alek urai untuk pasihibur tamu?"
+		naivQs.setAttrib 8, "translatedQ", "Menurut ekeu, alek urai nane untuk pasinilai sirimanua?"
+		naivQs.setAttrib 1, "translatedQabv",""
+		naivQs.setAttrib 2, "translatedQabv",""
+		naivQs.setAttrib 3, "translatedQabv",""
+		naivQs.setAttrib 4, "translatedQabv",""
+		naivQs.setAttrib 5, "translatedQabv",""
+		naivQs.setAttrib 6, "translatedQabv",""
+		naivQs.setAttrib 7, "translatedQabv",""
+		naivQs.setAttrib 8, "translatedQabv",""
+	Case "Tsimane"
+		ListeningTask.setAttrib 1, "text1", "Queremos pedirle que escuche partes cortas de música, y luego, queremos que cuentenos sobre lo que escucha. No está obligado participar, y si comienza y luego quiere parar, está bien."
+		ListeningTask.setAttrib 2, "text1", "Queremos pedirle que escuche partes cortas de música, y luego, queremos que cuentenos sobre lo que escucha. No está obligado participar, y si comienza y luego quiere parar, está bien."
+		ListeningTask.setAttrib 1, "text2", "Debería durar unos 20 minutos, y no creemos que exista ningún riesgo. Si tiene alguna pregunta sobre el estudio, puede consultarnos más tarde."
+		ListeningTask.setAttrib 2, "text2", "Debería durar unos 20 minutos, y no creemos que exista ningún riesgo. Si tiene alguna pregunta sobre el estudio, puede consultarnos más tarde."
+		ListeningTask.setAttrib 1, "text3", "¿Le gustaría participar en este estudio? Cuéntanos y ese será su consentimiento."
+		ListeningTask.setAttrib 2, "text3", "¿Le gustaría participar en este estudio? Cuéntanos y ese será su consentimiento."
+		ListeningTask.setAttrib 1, "text4", "Para el resto del estudio, tocaremos muchos ejemplos de música. Para cada ejemplo, le pediremos si la música se usa para diferentes propósitos. Por ejemplo, un propósito de la música podría ser ayudar a alguien a mejorarse, tranquilizar a un bebé, ayudar a alguien a bailar. La música puede tener muchos propósitos y queremos preguntarle sobre lo que piensa sobre el propósito de esta música."
+		ListeningTask.setAttrib 2, "text4", "Para el resto del estudio, tocaremos muchos ejemplos de música. Para cada ejemplo, le pediremos si la música se usa para diferentes propósitos. Por ejemplo, un propósito de la música podría ser ayudar a alguien a mejorarse, tranquilizar a un bebé, ayudar a alguien a bailar. La música puede tener muchos propósitos y queremos preguntarle sobre lo que piensa sobre el propósito de esta música."
+		ListeningTask.setAttrib 1, "text4a", "|Point to the button with the big circle| 'Este botón significa que sí.'  | Point to the middle button|  'Este botón significa un poco'.  | Point to the button with the smallest circle | 'Este botón significa no'.  Despues pregunte al sujeto - '¿Qué botón corresponde a un poco?'  Luego, '¿Qué botón corresponde a sí'?  Y luego, '¿Qué botón corresponde a no'?"
+		ListeningTask.setAttrib 2, "text4a", "|Point to the button with the big circle| 'Este botón significa que sí.'  | Point to the middle button|  'Este botón significa un poco'.  | Point to the button with the smallest circle | 'Este botón significa no'.  Despues pregunte al sujeto - '¿Qué botón corresponde a un poco?'  Luego, '¿Qué botón corresponde a sí'?  Y luego, '¿Qué botón corresponde a no'?"
+		ListeningTask.setAttrib 1, "text4b", "Todas estas canciones vienen de otros países, como Japón, India, Alemania y los EEUU. Por lo tanto, no comprenderemos sus palabras, pero esto no es un problema. Escuche el estilo o el sonido de la canción.  Piensa en lo siguente: ¿para qué se usa esta música? Por qué la gente canta esta canción?"
+		ListeningTask.setAttrib 2, "text4b", "Todas estas canciones vienen de otros países, como Japón, India, Alemania y los EEUU. Por lo tanto, no comprenderemos sus palabras, pero esto no es un problema. Escuche el estilo o el sonido de la canción.  Piensa en lo siguente: ¿para qué se usa esta música? Por qué la gente haciendo esta música?"
+		ListeningTask.setAttrib 1, "text5", "Por favor, piense bien antes de contestar. Si no está seguro de alguna de las preguntas, puede adivinar. Si no puede escuchar la música suficientemente, díganos para que podamos subir el volumen. Si tiene alguna pregunta o no comprende, cuéntenos. Si tiene problemas con una canción, podemos pasar a la siguiente."
+		ListeningTask.setAttrib 2, "text5", "Por favor, piense bien antes de contestar. Si no está seguro de alguna de las preguntas, puede adivinar. Si no puede escuchar la música suficientemente, díganos para que podamos subir el volumen. Si tiene alguna pregunta o no comprende, cuéntenos. Si tiene problemas con una canción, podemos pasar a la siguiente."
+		ListeningTask.setAttrib 1, "text6", "Primero, tendremos una canción de práctica para que sepa cómo es la tarea."
+		ListeningTask.setAttrib 2, "text6", "Primero, tendremos una canción de práctica para que sepa cómo es la tarea."
+		ListeningTask.setAttrib 1, "text7", "A veces puede que no esté seguro de su respuesta, así que haga su mejor conjetura."
+		ListeningTask.setAttrib 2, "text7", "A veces puede que no esté seguro de su respuesta, así que haga su mejor conjetura."
+		ListeningTask.setAttrib 1, "text8", "¿Tiene alguna pregunta? ¿Está listo para comenzar?"
+		ListeningTask.setAttrib 2, "text8", "¿Tiene alguna pregunta? ¿Está listo para comenzar?"
+		ListeningTask.setAttrib 1, "text9", "¿Está listo para escuchar la próxima canción?"
+		ListeningTask.setAttrib 2, "text9", "¿Está listo para escuchar la próxima canción?"
+		ListeningTask.setAttrib 1, "text10", "Ahora hemos terminado. Antes de irse, ¿puede decirme de nuevo qué botón corresponde a 'un poco'? Y qué botón corresponde a 'sí'? ¿Qué botón corresponde a 'no'?"
+		ListeningTask.setAttrib 2, "text10", "Ahora hemos terminado. Antes de irse, ¿puede decirme de nuevo qué botón corresponde a 'un poco'? Y qué botón corresponde a 'sí'? ¿Qué botón corresponde a 'no'?"
+		naivPracQs.setAttrib 1, "translatedQ", "¿Cree que las personas que hacen esta música la usan para bailar?"
+		naivPracQs.setAttrib 2, "translatedQ", "¿Cree que las personas que hacen esta música la usan para curar enfermedades?"
+		naivPracQs.setAttrib 3, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para calmar a un bebé?"
+		naivPracQs.setAttrib 4, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para expresar amor a otra persona?"
+		naivPracQs.setAttrib 5, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para llorar los muertos?"
+		naivPracQs.setAttrib 6, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para contar un cuento?"
+		naivPracQs.setAttrib 7, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para saludar a los visitantes?"
+		naivPracQs.setAttrib 8, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para celebrar los logros de una persona?"
+		naivQs.setAttrib 1, "translatedQ", "¿Cree que las personas que hacen esta música la usan para bailar?"
+		naivQs.setAttrib 2, "translatedQ", "¿Cree que las personas que hacen esta música la usan para curar enfermedades?"
+		naivQs.setAttrib 3, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para calmar a un bebé?"
+		naivQs.setAttrib 4, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para expresar amor a otra persona?"
+		naivQs.setAttrib 5, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para llorar los muertos?"
+		naivQs.setAttrib 6, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para contar un cuento?"
+		naivQs.setAttrib 7, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para saludar a los visitantes?"
+		naivQs.setAttrib 8, "translatedQ", "¿Cree que las personas que hacen esta música lo usan para celebrar los logros de una persona?"
+		naivQs.setAttrib 1, "translatedQabv",""
+		naivQs.setAttrib 2, "translatedQabv",""
+		naivQs.setAttrib 3, "translatedQabv",""
+		naivQs.setAttrib 4, "translatedQabv",""
+		naivQs.setAttrib 5, "translatedQabv",""
+		naivQs.setAttrib 6, "translatedQabv",""
+		naivQs.setAttrib 7, "translatedQabv",""
+		naivQs.setAttrib 8, "translatedQabv",""
+	Case "Vanuatu"
+		ListeningTask.setAttrib 1, "text1", "Iak sol kei kei, mama jaksaio amah ma taksatalingin ia pali nepeh, Nipalin, kiniai naihiau mina tiksin ia naha nim nalauk, wa nim nataling kin ia nepeh. Taka pah nuah ien, maling tukmah nakwah, kin kamaan , kini molkeikei mun ma takol mun naonin, lueh amah. Nipa kim amawa."
+		ListeningTask.setAttrib 2, "text1", "Iak sol kei kei, mama jaksaio amah ma taksatalingin ia pali nepeh, Nipalin, kiniai naihiau mina tiksin ia naha nim nalauk, wa nim nataling kin ia nepeh. Taka pah nuah ien, maling tukmah nakwah, kin kamaan , kini molkeikei mun ma takol mun naonin, lueh amah. Nipa kim amawa."
+		ListeningTask.setAttrib 1, "text2", "Niping kafam ipakamah katilum kuas. Kini nalklik laha likuk, Nahiao klikhuah wah. Kini nakaiaou."
+		ListeningTask.setAttrib 2, "text2", "Niping kafam ipakamah katilum kuas. Kini nalklik laha likuk, Nahiao klikhuah wah. Kini nakaiaou."
+		ListeningTask.setAttrib 1, "text3", "Nakol keikei mamah ik mun takwah pas kisol kuis naukilien eh?"
+		ListeningTask.setAttrib 2, "text3", "Nakol keikei mamah ik mun takwah pas kisol kuis naukilien eh?"
+		ListeningTask.setAttrib 1, "text4", "ia naukil ian eh takataling kin nepe mina. Leepsah ia nipeh kiniama, naiaou ian mina tuk luan. Mamah nipeh eh kapeh naha nangin. Klik ai mah nipei eh, kape, neimuk ian ia katikaowah, kape yelmamah tuk lol danis. Nipe kavam pisapis mine lipsah. Kini lilmama kavan mun naihiouien mina tuk luilah tuk ik mama nipeh eh kape naha nahagen? Kape nolien danis klik wah, wah kape naha nanghen."
+		ListeningTask.setAttrib 2, "text4", "ia naukil ian eh takataling kin nepe mina. Leepsah ia nipeh kiniama, naiaou ian mina tuk luan. Mamah nipeh eh kapeh naha nangin. Klik ai mah nipei eh, kape, neimuk ian ia katikaowah, kape yelmamah tuk lol danis. Nipe kavam pisapis mine lipsah. Kini lilmama kavan mun naihiouien mina tuk luilah tuk ik mama nipeh eh kape naha nahagen? Kape nolien danis klik wah, wah kape naha nanghen."
+		ListeningTask.setAttrib 1, "text4a", "Iameh lahuaow- elieehua angap. Awah.   ||   Iameh lahuaow- kualkuan. Awah/Nikaam   ||  Iameh lahuaow- Kuatin angap- Nikaam  ||  Nipalen kape? Awah kape? Nikaam kape?"
+		ListeningTask.setAttrib 2, "text4a", "Iameh lahuaow- elieehua angap. Awah.   ||   Iameh lahuaow- kualkuan. Awah/Nikaam   ||  Iameh lahuaow- Kuatin angap- Nikaam  ||  Nipalen kape? Awah kape? Nikaam kape?"
+		ListeningTask.setAttrib 1, "text4b", "Nepeh mina eh kape- Nimaptanna pusinpusin, kape sinua kilik, India, Jamaica, Uah New Kini, Nangial ien ilan iol neinei inan ilan, maling nalapnaping. Ataling ama kin namuh- Nipeh, mene nalimnaal tiksin mun (Kitar, drum, tikinao). Kiniai nikim lamuh mah nipeh eh kape naha."
+		ListeningTask.setAttrib 2, "text4b", "Nepeh mina eh kape- Nimaptanna pusinpusin, kape sinua kilik, India, Jamaica, Uah New Kini, Nangial ien ilan iol neinei inan ilan, maling nalapnaping. Ataling ama kin namuh- Nipeh, mene nalimnaal tiksin mun (Kitar, drum, tikinao). Kiniai nikim lamuh mah nipeh eh kape naha."
+		ListeningTask.setAttrib 1, "text5", "Nikim tuk lamu mala kuasing napiol nalkliik, naiaow ian mina eh tukmah naknei ne in kin napiol klik, ma infa, ineh  wah ineh.  ||  Ia nepeh mina, tukmah latitei peuk, nakni pas iaksol laktah peuk mun. Naiouh ian mina nakaiaou, wah nakapah nikunian nak ni. Ia nipe mina tukmah kapah namenian, nak nip ah kol ialmah."
+		ListeningTask.setAttrib 2, "text5", "Nikim tuk lamu mala kuasing napiol nalkliik, naiaow ian mina eh tukmah naknei ne in kin napiol klik, ma infa, ineh  wah ineh.  ||  Ia nepeh mina, tukmah latitei peuk, nakni pas iaksol laktah peuk mun. Naiouh ian mina nakaiaou, wah nakapah nikunian nak ni. Ia nipe mina tukmah kapah namenian, nak nip ah kol ialmah."
+		ListeningTask.setAttrib 1, "text6", "Kwasing kipialikakon, tuk saokil ia nipei klik. Kiniai naklukun ma naokil ian eh ine?"
+		ListeningTask.setAttrib 2, "text6", "Kwasing kipialikakon, tuk saokil ia nipei klik. Kiniai naklukun ma naokil ian eh ine?"
+		ListeningTask.setAttrib 1, "text7", "Niping klik, tak eno enou kin ia kafaam ninian. Kini maling takni apnaping amah klik ai lueh peuk."
+		ListeningTask.setAttrib 2, "text7", "Niping klik, tak eno enou kin ia kafaam ninian. Kini maling takni apnaping amah klik ai lueh peuk."
+		ListeningTask.setAttrib 1, "text8", "Nahiaou klik wah nikam? Tukwali kakun?"
+		ListeningTask.setAttrib 2, "text8", "Nahiaou klik wah nikam? Tukwali kakun?"
+		ListeningTask.setAttrib 1, "text9", "Len nalmen mah takatalingin nepe e ialmah?"
+		ListeningTask.setAttrib 2, "text9", "Len nalmen mah takatalingin nepe e ialmah?"
+		ListeningTask.setAttrib 1, "text10", "Nipalen kape? Awah kape? Nikaam kape?"
+		ListeningTask.setAttrib 2, "text10", "Nipalen kape? Awah kape? Nikaam kape?"
+		naivPracQs.setAttrib 1, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape nikiu kiu ian? (Danis)"
+		naivPracQs.setAttrib 2, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape nol mlangien? (Illness)"
+		naivPracQs.setAttrib 3, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape kuati kwaa. Lamapul nah nuas iahwien kuati kawuh (soothe baby)."
+		naivPracQs.setAttrib 4, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape ninian nolkeikei luan tuk ialmamah? (love)"
+		naivPracQs.setAttrib 5, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape ialmamah limamah? (death)"
+		naivPracQs.setAttrib 6, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape naousaouian? (story)"
+		naivPracQs.setAttrib 7, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape nilesiakta ialmah klik, ia kafam lukwanu? (visitors)"
+		naivPracQs.setAttrib 8, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape nuasiaktah nangih ialmamah tuk nahlwah mina limnol? "
+		naivQs.setAttrib 1, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape nikiu kiu ian? (Danis)"
+		naivQs.setAttrib 2, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape nol mlangien? (Illness)"
+		naivQs.setAttrib 3, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape kuati kwaa. Lamapul nah nuas iahwien kuati kawuh (soothe baby)."
+		naivQs.setAttrib 4, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei kape ninian nolkeikei luan tuk ialmamah? (love)"
+		naivQs.setAttrib 5, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape ialmamah limamah? (death)"
+		naivQs.setAttrib 6, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape naousaouian? (story)"
+		naivQs.setAttrib 7, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape nilesiakta ialmah klik, ia kafam lukwanu? (visitors)"
+		naivQs.setAttrib 8, "translatedQ", "Nalmamah eh kamani nipeh eh, in nipei klik kape nuasiaktah nangih ialmamah tuk nahlwah mina limnol? "
+		naivQs.setAttrib 1, "translatedQabv",""
+		naivQs.setAttrib 2, "translatedQabv",""
+		naivQs.setAttrib 3, "translatedQabv",""
+		naivQs.setAttrib 4, "translatedQabv",""
+		naivQs.setAttrib 5, "translatedQabv",""
+		naivQs.setAttrib 6, "translatedQabv",""
+		naivQs.setAttrib 7, "translatedQabv",""
+		naivQs.setAttrib 8, "translatedQabv",""
+	Case "Bislama"
+		ListeningTask.setAttrib 1, "text1", "Mifala I wantem yu blo lisen lo ol sotfala pats blo music. Afta yu ansarem ol questin long wanem we yu bin harem. Pos stat ale yu wantem leko, hemi stret, be yu mas letem mifala I save. Pos yu stop bifo lo end, still bae yu risivem wan smol gif."
+		ListeningTask.setAttrib 2, "text1", "Mifala I wantem yu blo lisen lo ol sotfala pats blo music. Afta yu ansarem ol questin long wanem we yu bin harem. Pos stat ale yu wantem leko, hemi stret, be yu mas letem mifala I save. Pos yu stop bifo lo end, still bae yu risivem wan smol gif."
+		ListeningTask.setAttrib 1, "text2", "Bai i tekem 30 minit mo mifala ino ting se bai I gat eni problem long hem. Pos yu kat eni question long saed blo risej ia yu save askem mifala long eni taem."
+		ListeningTask.setAttrib 2, "text2", "Bai i tekem 30 minit mo mifala ino ting se bai I gat eni problem long hem. Pos yu kat eni question long saed blo risej ia yu save askem mifala long eni taem."
+		ListeningTask.setAttrib 1, "text3", "Yu glad blo tekem pat lo stati ia? "
+		ListeningTask.setAttrib 2, "text3", "Yu glad blo tekem pat lo stati ia? "
+		ListeningTask.setAttrib 1, "text4", "Bai mifala I pleim yu fulap ol dif-diferent exampol blo ol music. Lo wan-wan music, bai mifala I askem yu lo tingting blo yu, se yu harem se music ia pepes blo hem I blo wanem. Exampol, mifala I save askem olsem, 'yu ting se music ia emi blo danis? O blo mekem bebe i silip?'"
+		ListeningTask.setAttrib 2, "text4", "Bai mifala I pleim yu fulap ol dif-diferent exampol blo ol music. Lo wan-wan music, bai mifala I askem yu lo tingting blo yu, se yu harem se music ia pepes blo hem I blo wanem. Exampol, mifala I save askem olsem, 'yu ting se music ia emi blo danis? O blo mekem bebe i silip?'"
+		ListeningTask.setAttrib 1, "text4a", "|Pointem bigfala button| Button ia I minim se 'yes'. |Pointem second bigfala button| Button ia I minim se 'smol'. |Pointem third bigfala button| Button ia I minim se 'no'.  ||   Wanem button I minim 'smo'? Wanem button I minim 'yes'? Wanem button I minim 'no'?"
+		ListeningTask.setAttrib 2, "text4a", "|Pointem bigfala button| Button ia I minim se 'yes'. |Pointem second bigfala button| Button ia I minim se 'smol'. |Pointem third bigfala button| Button ia I minim se 'no'.  ||   Wanem button I minim 'smo'? Wanem button I minim 'yes'? Wanem button I minim 'no'?"
+		ListeningTask.setAttrib 1, "text4b", "Evri singsing ia oli kamaout lo ol dif-difrent countries olsem Japan, India, Germany, wetem America, be yumi no save antastanem ol toktok blo olgeta, be emi no wan problem, yu harem nomo lo ol stael or noise blo ol singsing ia. Long tinging blong yu long music ia, from wanem nao oli mekem? From wanem nao ol man oli sta singem ol singsing ia?"
+		ListeningTask.setAttrib 2, "text4b", "Evri singsing ia oli kamaout lo ol dif-difrent countries olsem Japan, India, Germany, wetem America, be yumi no save antastanem ol toktok blo olgeta, be emi no wan problem, yu harem nomo lo ol stael or noise blo ol singsing ia. Long tinging blong yu long music ia, from wanem nao oli mekem? From wanem nao ol man oli sta singem ol singsing ia?"
+		ListeningTask.setAttrib 1, "text5", "Plis tingting gud bifo yu mekem ansa blo yu. Pos yu no save, yu save guess.  Pos yu no save harem gud music ia, yu save talem long mifala, blo mifala I save tanem volum iko antap. Pos yu gat eni questin o yu no save wan samting, yu letem mifala I save. Pos yu gat wan problem lo wan singsing mifala i save skipem iko lo narawan."
+		ListeningTask.setAttrib 2, "text5", "Plis tingting gud bifo yu mekem ansa blo yu. Pos yu no save, yu save guess.  Pos yu no save harem gud music ia, yu save talem long mifala, blo mifala I save tanem volum iko antap. Pos yu gat eni questin o yu no save wan samting, yu letem mifala I save. Pos yu gat wan problem lo wan singsing mifala i save skipem iko lo narawan."
+		ListeningTask.setAttrib 1, "text6", "Fesfala samting bai yumi traem practisim wan singsing, blo yu save gat tingting lo wanem blo mekem."
+		ListeningTask.setAttrib 2, "text6", "Fesfala samting bai yumi traem practisim wan singsing, blo yu save gat tingting lo wanem blo mekem."
+		ListeningTask.setAttrib 1, "text7", "Samtaem bai yu nomo save gud ansa blo yu, be yu save mekem wan gudfala ges."
+		ListeningTask.setAttrib 2, "text7", "Samtaem bai yu nomo save gud ansa blo yu, be yu save mekem wan gudfala ges."
+		ListeningTask.setAttrib 1, "text8", "Yu gat eni questin? Yu redi blo statem stati ia?"
+		ListeningTask.setAttrib 2, "text8", "Yu gat eni questin? Yu redi blo statem stati ia?"
+		ListeningTask.setAttrib 1, "text9", "Yu redi blo lisen lo narafala singsing?"
+		ListeningTask.setAttrib 2, "text9", "Yu redi blo lisen lo narafala singsing?"
+		ListeningTask.setAttrib 1, "text10", "Wanem button I minim 'smo'? Wanem button I minim 'yes'? Wanem button I minim 'no'?"
+		ListeningTask.setAttrib 2, "text10", "Wanem button I minim 'smo'? Wanem button I minim 'yes'? Wanem button I minim 'no'?"
+		naivPracQs.setAttrib 1, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo danis?"
+		naivPracQs.setAttrib 2, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo hilim sickness?"
+		naivPracQs.setAttrib 3, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usem blo mekem bebe I silip?"
+		naivPracQs.setAttrib 4, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo soem love iko lo nara man o woman?"
+		naivPracQs.setAttrib 5, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum lo wan ded?"
+		naivPracQs.setAttrib 6, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo talem wan stori?"
+		naivPracQs.setAttrib 7, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo welkam ol nara fala man o woman?"
+		naivPracQs.setAttrib 8, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo praisem wan man long wanem we hemi bin winim?"
+		naivQs.setAttrib 1, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo danis?"
+		naivQs.setAttrib 2, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo hilim sickness?"
+		naivQs.setAttrib 3, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usem blo mekem bebe I silip?"
+		naivQs.setAttrib 4, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo soem love iko lo nara man o woman?"
+		naivQs.setAttrib 5, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum lo wan ded?"
+		naivQs.setAttrib 6, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo talem wan stori?"
+		naivQs.setAttrib 7, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo welkam ol nara fala man o woman?"
+		naivQs.setAttrib 8, "translatedQ", "Yu ting se olgeta wei i mekem music ia, I usum blo praisem wan man long wanem we hemi bin winim?"
+		naivQs.setAttrib 1, "translatedQabv",""
+		naivQs.setAttrib 2, "translatedQabv",""
+		naivQs.setAttrib 3, "translatedQabv",""
+		naivQs.setAttrib 4, "translatedQabv",""
+		naivQs.setAttrib 5, "translatedQabv",""
+		naivQs.setAttrib 6, "translatedQabv",""
+		naivQs.setAttrib 7, "translatedQabv",""
+		naivQs.setAttrib 8, "translatedQabv",""
+	Case "Ethiopia"
+		ListeningTask.setAttrib 1, "text1", "Kisaki Suwa yong nika kiira teni emong (Eyewot) logo ani erumuor kinyekuunu ngakuro ngakiikidew nakingitakinio suwa yong, nakulomarto yong alomong (aloyewot). Nyikireikinio suwa yong nika echicheto. Nakan cha kon arai ichamuni yong akisiekin ka suwa akichichere kode aasikin dang. Ammete ngichan."
+		ListeningTask.setAttrib 2, "text1", "Kisaki Suwa yong nika kiira teni emong (Eyewot) logo ani erumuor kinyekuunu ngakuro ngakiikidew nakingitakinio suwa yong, nakulomarto yong alomong (aloyewot). Nyikireikinio suwa yong nika echicheto. Nakan cha kon arai ichamuni yong akisiekin ka suwa akichichere kode aasikin dang. Ammete ngichan."
+		ListeningTask.setAttrib 1, "text2", "Ngisa ngikikidew bon kisaki suwa. Ngadekikae ngatomoni-arei bon. Yekte nyiitam atemer kode epote ngakuro ngache. Ani keya ngakuro nape nyikilomarto yong, naasaki yong akingitakin suwa, ichuri yong akingitakin suwa ekisidi."
+		ListeningTask.setAttrib 2, "text2", "Ngisa ngikikidew bon kisaki suwa. Ngadekikae ngatomoni-arei bon. Yekte nyiitam atemer kode epote ngakuro ngache. Ani keya ngakuro nape nyikilomarto yong, naasaki yong akingitakin suwa, ichuri yong akingitakin suwa ekisidi."
+		ListeningTask.setAttrib 1, "text3", "Chamit kona yong akichichere ka suwa echich logo-a? Tolimuokinae! Yong cha ilope iyeni."
+		ListeningTask.setAttrib 2, "text3", "Chamit kona yong akichichere ka suwa echich logo-a? Tolimuokinae! Yong cha ilope iyeni."
+		ListeningTask.setAttrib 1, "text4", "Ani isiekinio ngoni echich logo, kingaanakinio suwa yong ngumongin (ngiyewon) lukaalak kanege ani erumuor topupoonok lokojokon. Kingitaanakinio nabo  suwa yong ngumongin (ngiyewon) ngulu daan angipeipei tolimuunu ngakuro na eyewotere ngumongin (ngiyewon) ngulu. Kona kilimari, eya ngumungin (ngiyewon)...."
+		ListeningTask.setAttrib 2, "text4", "Ani isiekinio ngoni echich logo, kingaanakinio suwa yong ngumongin (ngiyewon) lukaalak kanege ani erumuor topupoonok lokojokon. Kingitaanakinio nabo  suwa yong ngumongin (ngiyewon) ngulu daan angipeipei tolimuunu ngakuro na eyewotere ngumongin (ngiyewon) ngulu. Kona kilimari, eya ngumungin (ngiyewon)...."
+		ListeningTask.setAttrib 1, "text4a", "Etiang loapolon logo, erai lotamaret 'Mam'  Nyaali etiang lo ichamakinio lo elimuorea yong ngakuro atemer 'Kadoochi cha.' ? kode ('Bakin cha'?) Nyaali etiang lo etamarea yong 'Mam'?"
+		ListeningTask.setAttrib 2, "text4a", "Etiang loapolon logo, erai lotamaret 'Mam'  Nyaali etiang lo ichamakinio lo elimuorea yong ngakuro atemer 'Kadoochi cha.' ? kode ('Bakin cha'?) Nyaali etiang lo etamarea yong 'Mam'?"
+		ListeningTask.setAttrib 1, "text4b", "Arai ngumongin (ngiyewon) lugu daan ngika ngungolenyangae. Ngika ngutunga alua ngakopin anabei Japan, Ind, Jerman tia Amerka. Ammete ngichan eya arai pekeyenio ngoni ngakutuka kech dang. Topup yong etoil emong bon ( a eyewot bon) ke elote keng. Ani erumuor teyen teni ngakuro na eyewotere emong (eyewot) logo atemer, nyio? Kode nabo toyen teni atemer nyio esubeta kode etameta ngutunga ngumongin?"
+		ListeningTask.setAttrib 2, "text4b", "Arai ngumongin (ngiyewon) lugu daan ngika ngungolenyangae. Ngika ngutunga alua ngakopin anabei Japan, Ind, Jerman tia Amerka. Ammete ngichan eya arai pekeyenio ngoni ngakutuka kech dang. Topup yong etoil emong bon ( a eyewot bon) ke elote keng. Ani erumuor teyen teni ngakuro na eyewotere emong (eyewot) logo atemer, nyio? Kode nabo toyen teni atemer nyio esubeta kode etameta ngutunga ngumongin?"
+		ListeningTask.setAttrib 1, "text5", "Kitam dir lokojokon ibili yong akinyekun ngakuro a emong (a eyewot) kalogo. Arai keya  ngakuro napenyikulomarto yong dang , ichuri yong alimun ngakuro naatamit yong cha atemer ngesi pe nugu. Ani kedit etoil loopupi yong, tolimuokinae nika kiatakinae etoil. Ani keya ngakuro naasaki yong akingitakin suwa kode ngakuro napenyikulomarto yong, ichuri yong alimuor. Ani keyeyi emong (eyewot) lokugogongokini yong, ichuri yong tolimuo kupuorokinoe loche."
+		ListeningTask.setAttrib 2, "text5", "Kitam dir lokojokon ibili yong akinyekun ngakuro a emong (a eyewot) kalogo. Arai keya  ngakuro napenyikulomarto yong dang , ichuri yong alimun ngakuro naatamit yong cha atemer ngesi pe nugu. Ani kedit etoil loopupi yong, tolimuokinae nika kiatakinae etoil. Ani keya ngakuro naasaki yong akingitakin suwa kode ngakuro napenyikulomarto yong, ichuri yong alimuor. Ani keyeyi emong (eyewot) lokugogongokini yong, ichuri yong tolimuo kupuorokinoe loche."
+		ListeningTask.setAttrib 1, "text6", "Kutupupokini mono suwa yong ekingaren emong (eyewot) logo, kitamatamakinea (Kiningokinea mono) ngakuro nugu."
+		ListeningTask.setAttrib 2, "text6", "Kutupupokini mono suwa yong ekingaren emong (eyewot) logo, kitamatamakinea (Kiningokinea mono) ngakuro nugu."
+		ListeningTask.setAttrib 1, "text7", "Ichuri (emong) eyewot eche kutogogongokisi yong ngakuro keng. Ichuri yong alimun ngakuro cha na itami yong atemer ngesi pe nugu."
+		ListeningTask.setAttrib 2, "text7", "Ichuri (emong) eyewot eche kutogogongokisi yong ngakuro keng. Ichuri yong alimun ngakuro cha na itami yong atemer ngesi pe nugu."
+		ListeningTask.setAttrib 1, "text8", "Kulomasi ba yong ngakuro nugu? Subakina ba kona yong akisiekin?"
+		ListeningTask.setAttrib 2, "text8", "Kulomasi ba yong ngakuro nugu? Subakina ba kona yong akisiekin?"
+		ListeningTask.setAttrib 1, "text9", "Subakina ba kona yong akiirar emong loche nabo? Or (Kulosi ba lomong loche?)"
+		ListeningTask.setAttrib 2, "text9", "Subakina ba kona yong akiirar emong loche nabo? Or (Kulosi ba lomong loche?)"
+		ListeningTask.setAttrib 1, "text10", "Echidakin nayi ngoni peekona. Eringa mono yong nyeyeakara, tolimuokinae teni alotiang kalugu  lo ichamanakinio ibili yong atemer 'Kadoochi cha'? Kode lokiikinet atemer 'Ee'? Kode lo etamarre 'Mam'?"
+		ListeningTask.setAttrib 2, "text10", "Echidakin nayi ngoni peekona. Eringa mono yong nyeyeakara, tolimuokinae teni alotiang kalugu  lo ichamanakinio ibili yong atemer 'Kadoochi cha'? Kode lokiikinet atemer 'Ee'? Kode lo etamarre 'Mam'?"
+		naivPracQs.setAttrib 1, "translatedQ", "Erai pe emong (Eeyewot) logo lokilileat-ea?"
+		naivPracQs.setAttrib 2, "translatedQ", "Erai pe emong logo (lo angamuruok) lo esakere itoon nika kitojokere alodeke-a?  "
+		naivPracQs.setAttrib 3, "translatedQ", "Erai pe emong logo lokitataat ikoku-a?"
+		naivPracQs.setAttrib 4, "translatedQ", "Bala pe yong emong logo lo emauntor itoon ipei itoon cha keng ni emina?  (Kode lomaet itoon-ea?)"
+		naivPracQs.setAttrib 5, "translatedQ", "Bala pe yong emong logo lo igorere itoon ni etonit-ea? (lokialolongiet itoon ni etonit-ea?)"
+		naivPracQs.setAttrib 6, "translatedQ", "Bala pe yong emong logo itamuntae lolimuoret boyo-a? (lo aboyo-a?)"
+		naivPracQs.setAttrib 7, "translatedQ", "Bala pe yong emong logo lo imalare ngipeyok-a?"
+		naivPracQs.setAttrib 8, "translatedQ", "Bala pe yong emong logo itamunto ngutunga, arai lo idamidamere ebilio itoon ipei ekupuruor (anyarare/aitakin) naasubakinea itoon ngini ngakuro nakatienok-a?"
+		naivQs.setAttrib 1, "translatedQ", "Erai pe emong (Eeyewot) logo lokilileat-ea?"
+		naivQs.setAttrib 2, "translatedQ", "Erai pe emong logo (lo angamuruok) lo esakere itoon nika kitojokere alodeke-a?  "
+		naivQs.setAttrib 3, "translatedQ", "Erai pe emong logo lokitataat ikoku-a?"
+		naivQs.setAttrib 4, "translatedQ", "Bala pe yong emong logo lo emauntor itoon ipei itoon cha keng ni emina?  (Kode lomaet itoon-ea?)"
+		naivQs.setAttrib 5, "translatedQ", "Bala pe yong emong logo lo igorere itoon ni etonit-ea? (lokialolongiet itoon ni etonit-ea?)"
+		naivQs.setAttrib 6, "translatedQ", "Bala pe yong emong logo itamuntae lolimuoret boyo-a? (lo aboyo-a?)"
+		naivQs.setAttrib 7, "translatedQ", "Bala pe yong emong logo lo imalare ngipeyok-a?"
+		naivQs.setAttrib 8, "translatedQ", "Bala pe yong emong logo itamunto ngutunga, arai lo idamidamere ebilio itoon ipei ekupuruor (anyarare/aitakin) naasubakinea itoon ngini ngakuro nakatienok-a?"
+		naivQs.setAttrib 1, "translatedQabv","alolilea-a?"
+		naivQs.setAttrib 2, "translatedQabv","akitojok itoon alodeke-a?"
+		naivQs.setAttrib 3, "translatedQabv","akitatare ikoku-a?"
+		naivQs.setAttrib 4, "translatedQabv","akimamakin-ea?"
+		naivQs.setAttrib 5, "translatedQabv","akugoro itoon ni etonit-ea?"
+		naivQs.setAttrib 6, "translatedQabv","alimuor boyo-a?"
+		naivQs.setAttrib 7, "translatedQabv","akimalare ngipeyok-a?"
+		naivQs.setAttrib 8, "translatedQabv","akupuruor echich itoon lo esubakint ejok-a?"
+	End Select
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - InLine2 END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+		ListeningTask.Run c
+	'''''''''''''''''''''''''''''''''''''''''''''
+	'End Of Procedure Clean-Up
+	'''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	' We are processing any pending input masks.
+	' To prevent this code from being generated, set the Procedure object's
+	'.ProcessPendingInputMasks property to None.
+	'
+	' Loop until a condition allows us to complete this Procedure
+	Do
+		'Any requests for termination?
+		If GetTerminateMode() = ebTerminate Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Exit Do
+		ElseIf GetTerminateMode() = ebTerminateJump Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Err.Raise ebInputAccepted
+		End If
+
+		'NOTE: This Procedure is the root procedure in the Experiment Object.
+		'  No script generated here for Object.InputMasks.IsPending()
+
+		'Ready for the next object?
+		If Clock.Read >= GetNextTargetOnsetTime() Then
+			Exit Do
+		End If
+
+		'Conditional Exit?
+		If GetConditionalExitState() <> 0 Then
+			Exit Do
+		End If
+
+		If GetNextTargetOnsetTime() - Clock.Read > 4 Then Sleep 4
+		DoEvents
+	Loop
+	'
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	
+
+	c.Log
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+End Sub
+
+Sub LTproc_Run(c as Context)
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+		IntroInstructions1.ResetLoggingProperties
+		IntroInstructions2.ResetLoggingProperties
+		IntroInstructions3.ResetLoggingProperties
+		IntroInstructions4.ResetLoggingProperties
+		IntroInstructions5.ResetLoggingProperties
+		IntroInstructions6.ResetLoggingProperties
+		IntroInstructions7.ResetLoggingProperties
+		StartNaiv.ResetLoggingProperties
+		RecheckButtonComp.ResetLoggingProperties
+		Select Case IntroInstructions1.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set IntroInstructions1_SlideText = CSlideText(IntroInstructions1.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			IntroInstructions1_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1)
+			Set IntroInstructions1_SlideText = Nothing
+
+	End Select
+
+		Select Case IntroInstructions2.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set IntroInstructions2_SlideText = CSlideText(IntroInstructions2.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			IntroInstructions2_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_2)
+			Set IntroInstructions2_SlideText = Nothing
+
+	End Select
+
+		Select Case IntroInstructions3.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set IntroInstructions3_SlideText = CSlideText(IntroInstructions3.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			IntroInstructions3_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3)
+			Set IntroInstructions3_SlideText = Nothing
+
+	End Select
+
+		Select Case IntroInstructions4.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set IntroInstructions4_SlideText = CSlideText(IntroInstructions4.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			IntroInstructions4_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_4)
+			Set IntroInstructions4_SlideText = Nothing
+
+	End Select
+
+		Select Case IntroInstructions5.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set IntroInstructions5_SlideText = CSlideText(IntroInstructions5.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			IntroInstructions5_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_4 & ebLCase_a)
+			Set IntroInstructions5_SlideText = Nothing
+
+	End Select
+
+		Select Case IntroInstructions6.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set IntroInstructions6_SlideText = CSlideText(IntroInstructions6.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			IntroInstructions6_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_4 & ebLCase_b)
+			Set IntroInstructions6_SlideText = Nothing
+
+	End Select
+
+		Select Case IntroInstructions7.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set IntroInstructions7_SlideText = CSlideText(IntroInstructions7.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			IntroInstructions7_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_5)
+			Set IntroInstructions7_SlideText = Nothing
+
+	End Select
+
+	
+		Select Case RecheckButtonComp.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set RecheckButtonComp_SlideText = CSlideText(RecheckButtonComp.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			RecheckButtonComp_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1 & ebDigit_0)
+			Set RecheckButtonComp_SlideText = Nothing
+
+	End Select
+
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - conditioning BEGIN <conditioning>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	Select Case ListeningTask.getCurrentAttrib("cond")
+	Case "Raw"
+		PracticeNaiv.setNested 1, "practiceRaw"
+		naiv.setNested 1, "raw"
+	Case "Synth"
+		PracticeNaiv.setNested 1, "practiceSynth"
+		naiv.setNested 1, "flute"
+End Select
+
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - conditioning END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+	
+	
+	IntroInstructions1.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		IntroInstructions1EchoClients.RemoveAll
+		IntroInstructions1.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(IntroInstructions1.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	IntroInstructions1.Run
+	
+	
+	
+	IntroInstructions2.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		IntroInstructions2EchoClients.RemoveAll
+		IntroInstructions2.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(IntroInstructions2.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	IntroInstructions2.Run
+	
+	
+	
+	IntroInstructions3.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		IntroInstructions3EchoClients.RemoveAll
+		IntroInstructions3.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(IntroInstructions3.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	IntroInstructions3.Run
+	
+	
+	
+	IntroInstructions4.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		IntroInstructions4EchoClients.RemoveAll
+		IntroInstructions4.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(IntroInstructions4.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	IntroInstructions4.Run
+	
+	
+	
+	IntroInstructions5.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		IntroInstructions5EchoClients.RemoveAll
+		IntroInstructions5.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(IntroInstructions5.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	IntroInstructions5.Run
+	
+	
+	
+	IntroInstructions6.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		IntroInstructions6EchoClients.RemoveAll
+		IntroInstructions6.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(IntroInstructions6.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	IntroInstructions6.Run
+	
+	
+	
+	IntroInstructions7.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		IntroInstructions7EchoClients.RemoveAll
+		IntroInstructions7.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(IntroInstructions7.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	IntroInstructions7.Run
+	
+	
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - startJump BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+startJump:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume startJumpResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+startJumpResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - startJump END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+		PracticeNaiv.Run c
+	
+	
+	StartNaiv.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		StartNaivEchoClients.RemoveAll
+		StartNaiv.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_A & ebUCase_N & ebUCase_Y & ebBraceClose, ebEmptyText, CLng(StartNaiv.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	StartNaiv.Run
+		naiv.Run c
+	
+	
+	RecheckButtonComp.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		RecheckButtonCompEchoClients.RemoveAll
+		RecheckButtonComp.InputMasks.Add Keyboard.CreateInputMask(ebUCase_C & ebLCase_c & ebUCase_I & ebLCase_i, ebEmptyText, CLng(RecheckButtonComp.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	RecheckButtonComp.Run
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	'End Of Procedure Clean-Up
+	'''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	' We are processing any pending input masks.
+	' To prevent this code from being generated, set the Procedure object's
+	'.ProcessPendingInputMasks property to None.
+	'
+
+	' Enum through the items on the Procedure and
+	'  and determine if they are RteRunnableInputObject
+	LTproc_theCollection.RemoveAll
+	For LTproc_nObject = 1 To LTproc.ChildObjectCount
+		Set LTproc_theInputObject = CRteRunnableInputObject(Rte.GetObject(LTproc.GetChildObjectName(LTproc_nObject)))
+		If Not LTproc_theInputObject Is Nothing Then LTproc_theCollection.Add LTproc_theInputObject
+	Next
+
+	' Loop until a condition allows us to complete this Procedure
+	Do
+		'Any requests for termination?
+		If GetTerminateMode() = ebTerminate Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Exit Do
+		ElseIf GetTerminateMode() = ebTerminateJump Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Err.Raise ebInputAccepted
+		End If
+
+		' Any input mask on this procedure have pending input masks?
+		LTproc_bCanExit = True
+		For LTproc_nObject = 1 To LTproc_theCollection.Count
+			Set LTproc_theInputObject = CRteRunnableInputObject(LTproc_theCollection(LTproc_nObject))
+			If Not LTproc_theInputObject Is Nothing Then
+				If LTproc_theInputObject.InputMasks.IsPending() Then 
+					LTproc_bCanExit = False
+					Exit For
+				End If
+			End If
+		Next
+		
+		' No input masks
+		If LTproc_bCanExit Then Exit Do
+
+		'Ready for the next object?
+		If Clock.Read >= GetNextTargetOnsetTime() Then
+			Exit Do
+		End If
+
+		'Conditional Exit?
+		If GetConditionalExitState() <> 0 Then
+			Exit Do
+		End If
+
+		If GetNextTargetOnsetTime() - Clock.Read > 4 Then Sleep 4
+		DoEvents
+	Loop
+
+	' Cleanup
+	LTproc_theCollection.RemoveAll
+
+	'
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	
+	IntroInstructions1.EndOfProcedure
+
+	IntroInstructions2.EndOfProcedure
+
+	IntroInstructions3.EndOfProcedure
+
+	IntroInstructions4.EndOfProcedure
+
+	IntroInstructions5.EndOfProcedure
+
+	IntroInstructions6.EndOfProcedure
+
+	IntroInstructions7.EndOfProcedure
+
+	StartNaiv.EndOfProcedure
+
+	RecheckButtonComp.EndOfProcedure
+
+
+	c.Log
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+Sub naivProc_Run(c as Context)
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+		ReadyToPlay.ResetLoggingProperties
+		PlayTrack.ResetLoggingProperties
+		naivQfree.ResetLoggingProperties
+	
+		Select Case PlayTrack.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text1
+			Set PlayTrack_SlideText = CSlideText(PlayTrack.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1))
+			PlayTrack_SlideText.Text = "Track " &_ 
+				c.GetAttrib("songfile") &_ 
+				" playing"
+			Set PlayTrack_SlideText = Nothing
+
+			'Stim
+			Set PlayTrack_SlideSoundOut = CSlideSoundOut(PlayTrack.ActiveSlideState.Objects(ebUCase_S & ebLCase_t & ebLCase_i & ebLCase_m))
+			Set PlayTrack_SoundBuffer = PlayTrack_SlideSoundOut.Buffers(1)
+			PlayTrack_SoundBuffer.Filename = c.GetAttrib(ebLCase_s & ebLCase_o & ebLCase_n & ebLCase_g & ebLCase_f & ebLCase_i & ebLCase_l & ebLCase_e)
+			PlayTrack_SoundBuffer.Load
+			Set PlayTrack_SoundBuffer = Nothing
+			Set PlayTrack_SlideSoundOut = Nothing
+
+	End Select
+
+	
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	
+	
+	ReadyToPlay.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		ReadyToPlayEchoClients.RemoveAll
+		ReadyToPlay.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(ReadyToPlay.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	ReadyToPlay.Run
+	
+	
+	PlayTrack.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		PlayTrackEchoClients.RemoveAll
+		PlayTrack.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_E & ebUCase_N & ebUCase_T & ebUCase_E & ebUCase_R & ebBraceClose, ebEmptyText, CLng(PlayTrack.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	PlayTrack.Run
+	
+	
+	
+	naivQfree.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		naivQfreeEchoClients.RemoveAll
+		
+	Set DisplayEchoClients = Display.EchoClients
+	Set DisplayEchoClient = DisplayEchoClients.CreateEchoClient(ebDigit_1 & ebDigit_0 & ebPercent, ebDigit_3 & ebDigit_0 & ebPercent, ebDigit_8 & ebDigit_0 & ebPercent, ebDigit_5 & ebDigit_0 & ebPercent)
+	DisplayEchoClient.ForeColor = CColor(ebLCase_b & ebLCase_l & ebLCase_a & ebLCase_c & ebLCase_k)
+	DisplayEchoClient.BackColor = CColor(ebLCase_w & ebLCase_h & ebLCase_i & ebLCase_t & ebLCase_e)
+	DisplayEchoClient.BackStyle = ebLCase_o & ebLCase_p & ebLCase_a & ebLCase_q & ebLCase_u & ebLCase_e
+	DisplayEchoClient.BorderColor = CColor(ebLCase_b & ebLCase_l & ebLCase_a & ebLCase_c & ebLCase_k)
+	DisplayEchoClient.BorderWidth = CLng(ebDigit_1)
+	DisplayEchoClient.FontName = ebUCase_A & ebLCase_r & ebLCase_i & ebLCase_a & ebLCase_l
+	DisplayEchoClient.FontSize = ebDigit_1 & ebDigit_8
+	DisplayEchoClient.FontBold = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.FontItalic = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.FontUnderline = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.FontStrikeout = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.ShowPositionMarker = CLogical(ebUCase_Y & ebLCase_e & ebLCase_s)
+	DisplayEchoClient.ClearAfter = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.WordWrap = CLogical("Yes")
+
+		naivQfreeEchoClients.Add DisplayEchoClient
+		naivQfree.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_A & ebUCase_N & ebUCase_Y & ebBraceClose, ebEmptyText, CLng(naivQfree.Duration), CLng(ebDigit_9 & ebDigit_9 & ebDigit_9 & ebDigit_9), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebBraceOpen & ebUCase_E & ebUCase_S & ebUCase_C & ebUCase_A & ebUCase_P & ebUCase_E & ebBraceClose, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes", naivQfreeEchoClients)
+
+	
+		naivQfreeEchoClients.RemoveAll
+
+	Set DisplayEchoClients = Nothing
+	Set DisplayEchoClient = Nothing
+
+	End If
+
+	naivQfree.Run
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameOnsetDelay, naivQfree.OnsetDelay
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameOnsetTime, naivQfree.OnsetTime
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameDurationError, naivQfree.DurationError
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameRTTime, naivQfree.RTTime
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameACC, naivQfree.ACC
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameRT, naivQfree.RT
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameRESP, naivQfree.RESP
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameCRESP, naivQfree.CRESP
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameOnsetToOnsetTime, naivQfree.OnsetToOnsetTime
+	
+		naivQs.Run c
+	'''''''''''''''''''''''''''''''''''''''''''''
+	'End Of Procedure Clean-Up
+	'''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	' We are processing any pending input masks.
+	' To prevent this code from being generated, set the Procedure object's
+	'.ProcessPendingInputMasks property to None.
+	'
+
+	' Enum through the items on the Procedure and
+	'  and determine if they are RteRunnableInputObject
+	naivProc_theCollection.RemoveAll
+	For naivProc_nObject = 1 To naivProc.ChildObjectCount
+		Set naivProc_theInputObject = CRteRunnableInputObject(Rte.GetObject(naivProc.GetChildObjectName(naivProc_nObject)))
+		If Not naivProc_theInputObject Is Nothing Then naivProc_theCollection.Add naivProc_theInputObject
+	Next
+
+	' Loop until a condition allows us to complete this Procedure
+	Do
+		'Any requests for termination?
+		If GetTerminateMode() = ebTerminate Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Exit Do
+		ElseIf GetTerminateMode() = ebTerminateJump Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Err.Raise ebInputAccepted
+		End If
+
+		' Any input mask on this procedure have pending input masks?
+		naivProc_bCanExit = True
+		For naivProc_nObject = 1 To naivProc_theCollection.Count
+			Set naivProc_theInputObject = CRteRunnableInputObject(naivProc_theCollection(naivProc_nObject))
+			If Not naivProc_theInputObject Is Nothing Then
+				If naivProc_theInputObject.InputMasks.IsPending() Then 
+					naivProc_bCanExit = False
+					Exit For
+				End If
+			End If
+		Next
+		
+		' No input masks
+		If naivProc_bCanExit Then Exit Do
+
+		'Ready for the next object?
+		If Clock.Read >= GetNextTargetOnsetTime() Then
+			Exit Do
+		End If
+
+		'Conditional Exit?
+		If GetConditionalExitState() <> 0 Then
+			Exit Do
+		End If
+
+		If GetNextTargetOnsetTime() - Clock.Read > 4 Then Sleep 4
+		DoEvents
+	Loop
+
+	' Cleanup
+	naivProc_theCollection.RemoveAll
+
+	'
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	
+	ReadyToPlay.EndOfProcedure
+
+	PlayTrack.EndOfProcedure
+
+	naivQfree.EndOfProcedure
+
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameOnsetDelay, naivQfree.OnsetDelay
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameOnsetTime, naivQfree.OnsetTime
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameDurationError, naivQfree.DurationError
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameRTTime, naivQfree.RTTime
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameACC, naivQfree.ACC
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameRT, naivQfree.RT
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameRESP, naivQfree.RESP
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameCRESP, naivQfree.CRESP
+	c.SetAttrib naivQfree.Name & ebDot & ebLogNameOnsetToOnsetTime, naivQfree.OnsetToOnsetTime
+	
+
+	c.Log
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+End Sub
+
+
+
+
+
+
+
+Sub naivQproc_Run(c as Context)
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+		naivQ.ResetLoggingProperties
+		naivQnote.ResetLoggingProperties
+		Select Case naivQ.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text6
+			Set naivQ_SlideText = CSlideText(naivQ.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_6))
+			naivQ_SlideText.Text = c.GetAttrib("englishQabv") &_ 
+				"\n "
+			Set naivQ_SlideText = Nothing
+
+			'Text8
+			Set naivQ_SlideText = CSlideText(naivQ.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_8))
+			naivQ_SlideText.Text = c.GetAttrib("translatedQabv") &_ 
+				"\n "
+			Set naivQ_SlideText = Nothing
+
+			'Text2
+			Set naivQ_SlideText = CSlideText(naivQ.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_2))
+			naivQ_SlideText.Text = c.GetAttrib("translatedQ") &_ 
+				"\n "
+			Set naivQ_SlideText = Nothing
+
+			'Text4
+			Set naivQ_SlideText = CSlideText(naivQ.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_4))
+			naivQ_SlideText.Text = "This is song " &_ 
+				c.GetAttrib("naiv.Sample") &_ 
+				" of 18"
+			Set naivQ_SlideText = Nothing
+
+			'Text1
+			Set naivQ_SlideText = CSlideText(naivQ.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1))
+			naivQ_SlideText.Text = c.GetAttrib("englishQ") &_ 
+				"\n "
+			Set naivQ_SlideText = Nothing
+
+	End Select
+
+	
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	
+	
+	naivQ.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		naivQEchoClients.RemoveAll
+		naivQ.InputMasks.Add Keyboard.CreateInputMask(ebDigit_1 & ebDigit_2 & ebDigit_3 & ebDigit_4 & ebDigit_5 & ebDigit_6 & ebDigit_7 & ebDigit_0 & ebUCase_Y & ebLCase_y & ebUCase_N & ebLCase_n & ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose & ebBraceOpen & ebUCase_E & ebUCase_N & ebUCase_T & ebUCase_E & ebUCase_R & ebBraceClose, ebEmptyText, CLng(naivQ.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	naivQ.Run
+	
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameOnsetDelay, naivQ.OnsetDelay
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameOnsetTime, naivQ.OnsetTime
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameDurationError, naivQ.DurationError
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameRTTime, naivQ.RTTime
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameACC, naivQ.ACC
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameRT, naivQ.RT
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameRESP, naivQ.RESP
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameCRESP, naivQ.CRESP
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameOnsetToOnsetTime, naivQ.OnsetToOnsetTime
+	
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - postProcess BEGIN <postProcess>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	Select Case naivQ.RESP
+	Case "1", "2", "3", "4", "Y", "y", "N", "n", "5", "6", "7"
+		GoTo noNote
+End Select
+
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - postProcess END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+	
+	
+	naivQnote.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		naivQnoteEchoClients.RemoveAll
+		
+	Set DisplayEchoClients = Display.EchoClients
+	Set DisplayEchoClient = DisplayEchoClients.CreateEchoClient(ebDigit_1 & ebDigit_0 & ebPercent, ebDigit_3 & ebDigit_0 & ebPercent, ebDigit_8 & ebDigit_0 & ebPercent, ebDigit_5 & ebDigit_0 & ebPercent)
+	DisplayEchoClient.ForeColor = CColor(ebLCase_b & ebLCase_l & ebLCase_a & ebLCase_c & ebLCase_k)
+	DisplayEchoClient.BackColor = CColor(ebLCase_w & ebLCase_h & ebLCase_i & ebLCase_t & ebLCase_e)
+	DisplayEchoClient.BackStyle = ebLCase_o & ebLCase_p & ebLCase_a & ebLCase_q & ebLCase_u & ebLCase_e
+	DisplayEchoClient.BorderColor = CColor(ebLCase_b & ebLCase_l & ebLCase_a & ebLCase_c & ebLCase_k)
+	DisplayEchoClient.BorderWidth = CLng(ebDigit_1)
+	DisplayEchoClient.FontName = ebUCase_A & ebLCase_r & ebLCase_i & ebLCase_a & ebLCase_l
+	DisplayEchoClient.FontSize = ebDigit_1 & ebDigit_8
+	DisplayEchoClient.FontBold = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.FontItalic = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.FontUnderline = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.FontStrikeout = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.ShowPositionMarker = CLogical(ebUCase_Y & ebLCase_e & ebLCase_s)
+	DisplayEchoClient.ClearAfter = CLogical(ebUCase_N & ebLCase_o)
+	DisplayEchoClient.WordWrap = CLogical("Yes")
+
+		naivQnoteEchoClients.Add DisplayEchoClient
+		naivQnote.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_A & ebUCase_N & ebUCase_Y & ebBraceClose, ebEmptyText, CLng(naivQnote.Duration), CLng(ebDigit_9 & ebDigit_9 & ebDigit_9 & ebDigit_9), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebBraceOpen & ebUCase_E & ebUCase_S & ebUCase_C & ebUCase_A & ebUCase_P & ebUCase_E & ebBraceClose, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes", naivQnoteEchoClients)
+
+	
+		naivQnoteEchoClients.RemoveAll
+
+	Set DisplayEchoClients = Nothing
+	Set DisplayEchoClient = Nothing
+
+	End If
+
+	naivQnote.Run
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameOnsetDelay, naivQnote.OnsetDelay
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameOnsetTime, naivQnote.OnsetTime
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameDurationError, naivQnote.DurationError
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameRTTime, naivQnote.RTTime
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameACC, naivQnote.ACC
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameRT, naivQnote.RT
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameRESP, naivQnote.RESP
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameCRESP, naivQnote.CRESP
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameOnsetToOnsetTime, naivQnote.OnsetToOnsetTime
+	
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - postNote BEGIN <postNote>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	Select Case naivQ.RESP
+	Case "{ENTER}"
+		naivQs.Terminate
+		naiv.Terminate
+	Case "{SPACE}"
+		naivQs.Terminate
+End Select
+
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - postNote END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+	
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - noNote BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+noNote:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume noNoteResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+noNoteResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - noNote END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	'''''''''''''''''''''''''''''''''''''''''''''
+	'End Of Procedure Clean-Up
+	'''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	' We are processing any pending input masks.
+	' To prevent this code from being generated, set the Procedure object's
+	'.ProcessPendingInputMasks property to None.
+	'
+
+	' Enum through the items on the Procedure and
+	'  and determine if they are RteRunnableInputObject
+	naivQproc_theCollection.RemoveAll
+	For naivQproc_nObject = 1 To naivQproc.ChildObjectCount
+		Set naivQproc_theInputObject = CRteRunnableInputObject(Rte.GetObject(naivQproc.GetChildObjectName(naivQproc_nObject)))
+		If Not naivQproc_theInputObject Is Nothing Then naivQproc_theCollection.Add naivQproc_theInputObject
+	Next
+
+	' Loop until a condition allows us to complete this Procedure
+	Do
+		'Any requests for termination?
+		If GetTerminateMode() = ebTerminate Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Exit Do
+		ElseIf GetTerminateMode() = ebTerminateJump Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Err.Raise ebInputAccepted
+		End If
+
+		' Any input mask on this procedure have pending input masks?
+		naivQproc_bCanExit = True
+		For naivQproc_nObject = 1 To naivQproc_theCollection.Count
+			Set naivQproc_theInputObject = CRteRunnableInputObject(naivQproc_theCollection(naivQproc_nObject))
+			If Not naivQproc_theInputObject Is Nothing Then
+				If naivQproc_theInputObject.InputMasks.IsPending() Then 
+					naivQproc_bCanExit = False
+					Exit For
+				End If
+			End If
+		Next
+		
+		' No input masks
+		If naivQproc_bCanExit Then Exit Do
+
+		'Ready for the next object?
+		If Clock.Read >= GetNextTargetOnsetTime() Then
+			Exit Do
+		End If
+
+		'Conditional Exit?
+		If GetConditionalExitState() <> 0 Then
+			Exit Do
+		End If
+
+		If GetNextTargetOnsetTime() - Clock.Read > 4 Then Sleep 4
+		DoEvents
+	Loop
+
+	' Cleanup
+	naivQproc_theCollection.RemoveAll
+
+	'
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	
+	naivQ.EndOfProcedure
+
+	naivQnote.EndOfProcedure
+
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameOnsetDelay, naivQ.OnsetDelay
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameOnsetTime, naivQ.OnsetTime
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameDurationError, naivQ.DurationError
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameRTTime, naivQ.RTTime
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameACC, naivQ.ACC
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameRT, naivQ.RT
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameRESP, naivQ.RESP
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameCRESP, naivQ.CRESP
+	c.SetAttrib naivQ.Name & ebDot & ebLogNameOnsetToOnsetTime, naivQ.OnsetToOnsetTime
+	
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameOnsetDelay, naivQnote.OnsetDelay
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameOnsetTime, naivQnote.OnsetTime
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameDurationError, naivQnote.DurationError
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameRTTime, naivQnote.RTTime
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameACC, naivQnote.ACC
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameRT, naivQnote.RT
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameRESP, naivQnote.RESP
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameCRESP, naivQnote.CRESP
+	c.SetAttrib naivQnote.Name & ebDot & ebLogNameOnsetToOnsetTime, naivQnote.OnsetToOnsetTime
+	
+
+	c.Log
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+End Sub
+
+
+
+
+
+Sub PracProc_Run(c as Context)
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+		PracticeTrackInst.ResetLoggingProperties
+		ReadyToPlay.ResetLoggingProperties
+		PlayTrack.ResetLoggingProperties
+		PracticeQInst.ResetLoggingProperties
+		EndTrack.ResetLoggingProperties
+		Select Case PracticeTrackInst.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text2
+			Set PracticeTrackInst_SlideText = CSlideText(PracticeTrackInst.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_2))
+			PracticeTrackInst_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_6)
+			Set PracticeTrackInst_SlideText = Nothing
+
+	End Select
+
+	
+		Select Case PlayTrack.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text1
+			Set PlayTrack_SlideText = CSlideText(PlayTrack.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1))
+			PlayTrack_SlideText.Text = "Track " &_ 
+				c.GetAttrib("songfile") &_ 
+				" playing"
+			Set PlayTrack_SlideText = Nothing
+
+			'Stim
+			Set PlayTrack_SlideSoundOut = CSlideSoundOut(PlayTrack.ActiveSlideState.Objects(ebUCase_S & ebLCase_t & ebLCase_i & ebLCase_m))
+			Set PlayTrack_SoundBuffer = PlayTrack_SlideSoundOut.Buffers(1)
+			PlayTrack_SoundBuffer.Filename = c.GetAttrib(ebLCase_s & ebLCase_o & ebLCase_n & ebLCase_g & ebLCase_f & ebLCase_i & ebLCase_l & ebLCase_e)
+			PlayTrack_SoundBuffer.Load
+			Set PlayTrack_SoundBuffer = Nothing
+			Set PlayTrack_SlideSoundOut = Nothing
+
+	End Select
+
+		Select Case PracticeQInst.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text2
+			Set PracticeQInst_SlideText = CSlideText(PracticeQInst.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_2))
+			PracticeQInst_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_7)
+			Set PracticeQInst_SlideText = Nothing
+
+	End Select
+
+	
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	
+	
+	PracticeTrackInst.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		PracticeTrackInstEchoClients.RemoveAll
+		PracticeTrackInst.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(PracticeTrackInst.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	PracticeTrackInst.Run
+	
+	
+	
+	ReadyToPlay.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		ReadyToPlayEchoClients.RemoveAll
+		ReadyToPlay.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose, ebEmptyText, CLng(ReadyToPlay.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	ReadyToPlay.Run
+	
+	
+	PlayTrack.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		PlayTrackEchoClients.RemoveAll
+		PlayTrack.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_E & ebUCase_N & ebUCase_T & ebUCase_E & ebUCase_R & ebBraceClose, ebEmptyText, CLng(PlayTrack.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	PlayTrack.Run
+	
+	
+	
+	PracticeQInst.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		PracticeQInstEchoClients.RemoveAll
+		PracticeQInst.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose & ebBraceOpen & ebUCase_E & ebUCase_N & ebUCase_T & ebUCase_E & ebUCase_R & ebBraceClose, ebEmptyText, CLng(PracticeQInst.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	PracticeQInst.Run
+	
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameOnsetDelay, PracticeQInst.OnsetDelay
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameOnsetTime, PracticeQInst.OnsetTime
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameDurationError, PracticeQInst.DurationError
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameRTTime, PracticeQInst.RTTime
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameACC, PracticeQInst.ACC
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameRT, PracticeQInst.RT
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameRESP, PracticeQInst.RESP
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameCRESP, PracticeQInst.CRESP
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameOnsetToOnsetTime, PracticeQInst.OnsetToOnsetTime
+	
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - InLine5 BEGIN <InLine5>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	Select Case PracticeQInst.RESP
+	Case "{ENTER}"
+		PracticeNaiv.Terminate
+		GoTo practiceQuit
+End Select
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - InLine5 END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+		naivPracQs.Run c
+	
+	
+	EndTrack.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		EndTrackEchoClients.RemoveAll
+		EndTrack.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose & ebBraceOpen & ebUCase_E & ebUCase_N & ebUCase_T & ebUCase_E & ebUCase_R & ebBraceClose, ebEmptyText, CLng(EndTrack.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	EndTrack.Run
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - InLine1 BEGIN <InLine1>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	Select Case EndTrack.RESP
+	Case "{ENTER}"
+		PracticeNaiv.Terminate
+End Select
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - InLine1 END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+	
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - practiceQuit BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+practiceQuit:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume practiceQuitResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+practiceQuitResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - practiceQuit END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	'''''''''''''''''''''''''''''''''''''''''''''
+	'End Of Procedure Clean-Up
+	'''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	' We are processing any pending input masks.
+	' To prevent this code from being generated, set the Procedure object's
+	'.ProcessPendingInputMasks property to None.
+	'
+
+	' Enum through the items on the Procedure and
+	'  and determine if they are RteRunnableInputObject
+	PracProc_theCollection.RemoveAll
+	For PracProc_nObject = 1 To PracProc.ChildObjectCount
+		Set PracProc_theInputObject = CRteRunnableInputObject(Rte.GetObject(PracProc.GetChildObjectName(PracProc_nObject)))
+		If Not PracProc_theInputObject Is Nothing Then PracProc_theCollection.Add PracProc_theInputObject
+	Next
+
+	' Loop until a condition allows us to complete this Procedure
+	Do
+		'Any requests for termination?
+		If GetTerminateMode() = ebTerminate Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Exit Do
+		ElseIf GetTerminateMode() = ebTerminateJump Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Err.Raise ebInputAccepted
+		End If
+
+		' Any input mask on this procedure have pending input masks?
+		PracProc_bCanExit = True
+		For PracProc_nObject = 1 To PracProc_theCollection.Count
+			Set PracProc_theInputObject = CRteRunnableInputObject(PracProc_theCollection(PracProc_nObject))
+			If Not PracProc_theInputObject Is Nothing Then
+				If PracProc_theInputObject.InputMasks.IsPending() Then 
+					PracProc_bCanExit = False
+					Exit For
+				End If
+			End If
+		Next
+		
+		' No input masks
+		If PracProc_bCanExit Then Exit Do
+
+		'Ready for the next object?
+		If Clock.Read >= GetNextTargetOnsetTime() Then
+			Exit Do
+		End If
+
+		'Conditional Exit?
+		If GetConditionalExitState() <> 0 Then
+			Exit Do
+		End If
+
+		If GetNextTargetOnsetTime() - Clock.Read > 4 Then Sleep 4
+		DoEvents
+	Loop
+
+	' Cleanup
+	PracProc_theCollection.RemoveAll
+
+	'
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	
+	PracticeTrackInst.EndOfProcedure
+
+	ReadyToPlay.EndOfProcedure
+
+	PlayTrack.EndOfProcedure
+
+	PracticeQInst.EndOfProcedure
+
+	EndTrack.EndOfProcedure
+
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameOnsetDelay, PracticeQInst.OnsetDelay
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameOnsetTime, PracticeQInst.OnsetTime
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameDurationError, PracticeQInst.DurationError
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameRTTime, PracticeQInst.RTTime
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameACC, PracticeQInst.ACC
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameRT, PracticeQInst.RT
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameRESP, PracticeQInst.RESP
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameCRESP, PracticeQInst.CRESP
+	c.SetAttrib PracticeQInst.Name & ebDot & ebLogNameOnsetToOnsetTime, PracticeQInst.OnsetToOnsetTime
+	
+
+	c.Log
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+End Sub
+
+Sub PracQproc_Run(c as Context)
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+		PracQ.ResetLoggingProperties
+		PracticeQPostInst.ResetLoggingProperties
+		Select Case PracQ.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text2
+			Set PracQ_SlideText = CSlideText(PracQ.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_2))
+			PracQ_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_r & ebLCase_a & ebLCase_n & ebLCase_s & ebLCase_l & ebLCase_a & ebLCase_t & ebLCase_e & ebLCase_d & ebUCase_Q)
+			Set PracQ_SlideText = Nothing
+
+			'Text1
+			Set PracQ_SlideText = CSlideText(PracQ.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_1))
+			PracQ_SlideText.Text = c.GetAttrib(ebLCase_e & ebLCase_n & ebLCase_g & ebLCase_l & ebLCase_i & ebLCase_s & ebLCase_h & ebUCase_Q)
+			Set PracQ_SlideText = Nothing
+
+	End Select
+
+		Select Case PracticeQPostInst.ActiveState
+		Case ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t
+
+
+			'Text3
+			Set PracticeQPostInst_SlideText = CSlideText(PracticeQPostInst.ActiveSlideState.Objects(ebUCase_T & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_3))
+			PracticeQPostInst_SlideText.Text = c.GetAttrib(ebLCase_t & ebLCase_e & ebLCase_x & ebLCase_t & ebDigit_8)
+			Set PracticeQPostInst_SlideText = Nothing
+
+	End Select
+
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Start:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_StartResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_StartResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Start END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	
+	
+	PracQ.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		PracQEchoClients.RemoveAll
+		PracQ.InputMasks.Add Keyboard.CreateInputMask(ebDigit_1 & ebDigit_2 & ebDigit_3 & ebDigit_4 & ebDigit_5 & ebDigit_6 & ebDigit_7 & ebDigit_0 & ebUCase_Y & ebLCase_y & ebUCase_N & ebLCase_n & ebBraceOpen & ebUCase_S & ebUCase_P & ebUCase_A & ebUCase_C & ebUCase_E & ebBraceClose & ebBraceOpen & ebUCase_E & ebUCase_N & ebUCase_T & ebUCase_E & ebUCase_R & ebBraceClose, ebEmptyText, CLng(PracQ.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	PracQ.Run
+	
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameOnsetDelay, PracQ.OnsetDelay
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameOnsetTime, PracQ.OnsetTime
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameDurationError, PracQ.DurationError
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameRTTime, PracQ.RTTime
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameACC, PracQ.ACC
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameRT, PracQ.RT
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameRESP, PracQ.RESP
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameCRESP, PracQ.CRESP
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameOnsetToOnsetTime, PracQ.OnsetToOnsetTime
+	
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - postProcess1 BEGIN <postProcess1>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	Select Case PracQ.RESP
+	Case "1", "2", "3", "4", "0", "Y", "N", "y", "n"
+	Case "{ENTER}"
+		naivPracQs.Terminate
+		PracticeNaiv.Terminate
+		GoTo pracQend
+	Case "{SPACE}"
+		naivPracQs.Terminate
+		GoTo pracQend
+End Select
+
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - postProcess1 END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+	
+	
+	PracticeQPostInst.InputMasks.Reset
+	
+	If Keyboard.GetState() = ebStateOpen Then
+		PracticeQPostInstEchoClients.RemoveAll
+		PracticeQPostInst.InputMasks.Add Keyboard.CreateInputMask(ebBraceOpen & ebUCase_A & ebUCase_N & ebUCase_Y & ebBraceClose, ebEmptyText, CLng(PracticeQPostInst.Duration), CLng(ebDigit_1), ebEndResponseActionTerminate, CLogical(ebUCase_Y & ebLCase_e & ebLCase_s), ebEmptyText, ebEmptyText, "AutoResponseEnabled:Yes ResponseMode:All ProcessBackspace:Yes")
+
+	
+	End If
+
+	PracticeQPostInst.Run
+	
+	
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - PTcheckend BEGIN <PTcheckend>
+	'''''''''''''''''''''''''''''''''''''''''''''
+	If (PracticeQPostInst.RESP="{ENTER}") Then
+	naivPracQs.Terminate
+	PracticeNaiv.Terminate
+End If
+	'''''''''''''''''''''''''''''''''''''''''''''
+	' InLine - PTcheckend END
+	'''''''''''''''''''''''''''''''''''''''''''''
+	
+	
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - pracQend BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+pracQend:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume pracQendResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+pracQendResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - pracQend END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	'''''''''''''''''''''''''''''''''''''''''''''
+	'End Of Procedure Clean-Up
+	'''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Timeline_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_Timeline_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_Timeline_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Timeline_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	' We are processing any pending input masks.
+	' To prevent this code from being generated, set the Procedure object's
+	'.ProcessPendingInputMasks property to None.
+	'
+
+	' Enum through the items on the Procedure and
+	'  and determine if they are RteRunnableInputObject
+	PracQproc_theCollection.RemoveAll
+	For PracQproc_nObject = 1 To PracQproc.ChildObjectCount
+		Set PracQproc_theInputObject = CRteRunnableInputObject(Rte.GetObject(PracQproc.GetChildObjectName(PracQproc_nObject)))
+		If Not PracQproc_theInputObject Is Nothing Then PracQproc_theCollection.Add PracQproc_theInputObject
+	Next
+
+	' Loop until a condition allows us to complete this Procedure
+	Do
+		'Any requests for termination?
+		If GetTerminateMode() = ebTerminate Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Exit Do
+		ElseIf GetTerminateMode() = ebTerminateJump Then
+			SetTerminateMode ebTerminateNone
+			SetNextTargetOnsetTime Clock.Read
+			Err.Raise ebInputAccepted
+		End If
+
+		' Any input mask on this procedure have pending input masks?
+		PracQproc_bCanExit = True
+		For PracQproc_nObject = 1 To PracQproc_theCollection.Count
+			Set PracQproc_theInputObject = CRteRunnableInputObject(PracQproc_theCollection(PracQproc_nObject))
+			If Not PracQproc_theInputObject Is Nothing Then
+				If PracQproc_theInputObject.InputMasks.IsPending() Then 
+					PracQproc_bCanExit = False
+					Exit For
+				End If
+			End If
+		Next
+		
+		' No input masks
+		If PracQproc_bCanExit Then Exit Do
+
+		'Ready for the next object?
+		If Clock.Read >= GetNextTargetOnsetTime() Then
+			Exit Do
+		End If
+
+		'Conditional Exit?
+		If GetConditionalExitState() <> 0 Then
+			Exit Do
+		End If
+
+		If GetNextTargetOnsetTime() - Clock.Read > 4 Then Sleep 4
+		DoEvents
+	Loop
+
+	' Cleanup
+	PracQproc_theCollection.RemoveAll
+
+	'
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	
+	PracQ.EndOfProcedure
+
+	PracticeQPostInst.EndOfProcedure
+
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameOnsetDelay, PracQ.OnsetDelay
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameOnsetTime, PracQ.OnsetTime
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameDurationError, PracQ.DurationError
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameRTTime, PracQ.RTTime
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameACC, PracQ.ACC
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameRT, PracQ.RT
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameRESP, PracQ.RESP
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameCRESP, PracQ.CRESP
+	c.SetAttrib PracQ.Name & ebDot & ebLogNameOnsetToOnsetTime, PracQ.OnsetToOnsetTime
+	
+
+	c.Log
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish BEGIN
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Procedure_Finish:
+	If Err.Number = ebInputAccepted Then
+		Err.Clear
+		Resume Procedure_FinishResume
+	ElseIf Err.Number <> 0 Then
+		'NOTE: If you receive a runtime error here, it
+		' is because a runtime error other than ebInputAccepted
+		' was thrown (ebInputAccepted for catching input masks that jump).
+		'You are encouraged to either handle the error so that
+		' it is not thrown in the future or will have to set up
+		' your own error handler, which will also need to take
+		' into account for any input masks that jump.
+		'
+		'Raise the error so the default error handler will show the message
+		Err.Raise Err.Number, Err.Source, Err.Description
+	End If
+
+Procedure_FinishResume:
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'	Label - Procedure_Finish END
+	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+'--------------------------------------------------------------------------
+' InitDevices
+'
+'--------------------------------------------------------------------------
+Sub InitDevices(c As Context)
+
+
+	Set Display = New DisplayDevice
+	Display.Name = ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y
+
+	Dim DisplayDisplayDeviceInfo As DisplayDeviceInfo
+	DisplayDisplayDeviceInfo.XRes = 1280
+	DisplayDisplayDeviceInfo.YRes = 1024
+	DisplayDisplayDeviceInfo.ColorDepth = 32
+	DisplayDisplayDeviceInfo.DisplayIndex = 1
+	DisplayDisplayDeviceInfo.UseDesktopSettings = False
+	DisplayDisplayDeviceInfo.DefaultColor = Color.White
+	DisplayDisplayDeviceInfo.RefreshRateRequested = 0
+	DisplayDisplayDeviceInfo.NumPages = 0
+	
+	'Load values from context if they exist
+	If c.AttribExists(Display.Name & ebDot & ebUCase_X & ebUCase_R & ebLCase_e & ebLCase_s) Then DisplayDisplayDeviceInfo.XRes = CLng(c.GetAttrib(Display.Name & ebDot & ebUCase_X & ebUCase_R & ebLCase_e & ebLCase_s))
+	If c.AttribExists(Display.Name & ebDot & ebUCase_Y & ebUCase_R & ebLCase_e & ebLCase_s) Then DisplayDisplayDeviceInfo.YRes = CLng(c.GetAttrib(Display.Name & ebDot & ebUCase_Y & ebUCase_R & ebLCase_e & ebLCase_s))
+	If c.AttribExists(Display.Name & ebDot & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_o & ebLCase_r & ebUCase_D & ebLCase_e & ebLCase_p & ebLCase_t & ebLCase_h) Then DisplayDisplayDeviceInfo.ColorDepth = CLng(c.GetAttrib(Display.Name & ebDot & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_o & ebLCase_r & ebUCase_D & ebLCase_e & ebLCase_p & ebLCase_t & ebLCase_h))
+	If c.AttribExists(Display.Name & ebDot & ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebUCase_I & ebLCase_n & ebLCase_d & ebLCase_e & ebLCase_x) Then DisplayDisplayDeviceInfo.DisplayIndex = CLng(c.GetAttrib(Display.Name & ebDot & ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebUCase_I & ebLCase_n & ebLCase_d & ebLCase_e & ebLCase_x))
+	If c.AttribExists(Display.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_o & ebLCase_r) Then DisplayDisplayDeviceInfo.DefaultColor = CColor(c.GetAttrib(Display.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_o & ebLCase_r))
+	If c.AttribExists(Display.Name & ebDot & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_R & ebLCase_a & ebLCase_t & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_s & ebLCase_t & ebLCase_e & ebLCase_d) Then DisplayDisplayDeviceInfo.RefreshRateRequested = CLng(c.GetAttrib(Display.Name & ebDot & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_R & ebLCase_a & ebLCase_t & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_s & ebLCase_t & ebLCase_e & ebLCase_d))
+	If c.AttribExists(Display.Name & ebDot & ebUCase_N & ebLCase_u & ebLCase_m & ebUCase_P & ebLCase_a & ebLCase_g & ebLCase_e & ebLCase_s) Then DisplayDisplayDeviceInfo.NumPages = CLng(c.GetAttrib(Display.Name & ebDot & ebUCase_N & ebLCase_u & ebLCase_m & ebUCase_P & ebLCase_a & ebLCase_g & ebLCase_e & ebLCase_s))
+	If c.AttribExists(Display.Name & ebDot & ebUCase_U & ebLCase_s & ebLCase_e & ebUCase_D & ebLCase_e & ebLCase_s & ebLCase_k & ebLCase_t & ebLCase_o & ebLCase_p & ebUCase_S & ebLCase_e & ebLCase_t & ebLCase_t & ebLCase_i & ebLCase_n & ebLCase_g & ebLCase_s) Then DisplayDisplayDeviceInfo.UseDesktopSettings = CLogical(c.GetAttrib(Display.Name & ebDot & ebUCase_U & ebLCase_s & ebLCase_e & ebUCase_D & ebLCase_e & ebLCase_s & ebLCase_k & ebLCase_t & ebLCase_o & ebLCase_p & ebUCase_S & ebLCase_e & ebLCase_t & ebLCase_t & ebLCase_i & ebLCase_n & ebLCase_g & ebLCase_s))
+	
+	'Open the device, unless the context values indicate otherwise
+	Dim DisplayOpen As Boolean
+	DisplayOpen = True
+	If c.AttribExists(Display.Name & ebDot & ebUCase_O & ebLCase_p & ebLCase_e & ebLCase_n) Then DisplayOpen = CLogical(c.GetAttrib(Display.Name & ebDot & ebUCase_O & ebLCase_p & ebLCase_e & ebLCase_n))
+	If DisplayOpen = True Then
+		Display.Open DisplayDisplayDeviceInfo
+		Display.RefreshAlignment = ebDigit_2 & ebDigit_5 & ebPercent
+		If c.AttribExists(Display.Name & ebDot & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_A & ebLCase_l & ebLCase_i & ebLCase_g & ebLCase_n & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t) Then Display.RefreshAlignment = c.GetAttrib(Display.Name & ebDot & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_A & ebLCase_l & ebLCase_i & ebLCase_g & ebLCase_n & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t)
+	#If RUNTIME_VERSION_PERSIST >= 201 Then
+		Display.RTAdjustment = 0
+		If c.AttribExists(Display.Name & ebDot & ebUCase_R & ebUCase_T & ebUCase_A & ebLCase_d & ebLCase_j & ebLCase_u & ebLCase_s & ebLCase_t & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t) Then Display.RTAdjustment = CLng(c.GetAttrib(Display.Name & ebDot & ebUCase_R & ebUCase_T & ebUCase_A & ebLCase_d & ebLCase_j & ebLCase_u & ebLCase_s & ebLCase_t & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t))
+	#End If
+End If
+
+	'Enable flipping, if requested
+	If c.AttribExists(Display.Name & ebDot & ebUCase_F & ebLCase_l & ebLCase_i & ebLCase_p & ebLCase_p & ebLCase_i & ebLCase_n & ebLCase_g & ebUCase_E & ebLCase_n & ebLCase_a & ebLCase_b & ebLCase_l & ebLCase_e & ebLCase_d) Then
+		Display.FlippingEnabled = CLogical(c.GetAttrib(Display.Name & ebDot & ebUCase_F & ebLCase_l & ebLCase_i & ebLCase_p & ebLCase_p & ebLCase_i & ebLCase_n & ebLCase_g & ebUCase_E & ebLCase_n & ebLCase_a & ebLCase_b & ebLCase_l & ebLCase_e & ebLCase_d))
+	Else
+		Display.FlippingEnabled = True
+	End If
+
+	Set Keyboard = New KeyboardDevice
+	Keyboard.Name = ebUCase_K & ebLCase_e & ebLCase_y & ebLCase_b & ebLCase_o & ebLCase_a & ebLCase_r & ebLCase_d
+
+
+	Dim KeyboardKeyboardDeviceInfo as KeyboardDeviceInfo
+	KeyboardKeyboardDeviceInfo.CollectionMode = ebPressesOnly
+	KeyboardKeyboardDeviceInfo.CapsLock = ebCapsLockOff
+	KeyboardKeyboardDeviceInfo.NumLock = ebNumLockOn
+	'Load values from context if they exist
+	If c.AttribExists(Keyboard.Name & ebDot & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_l & ebLCase_e & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebUCase_M & ebLCase_o & ebLCase_d & ebLCase_e) Then KeyboardKeyboardDeviceInfo.CollectionMode = CLng(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_l & ebLCase_e & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebUCase_M & ebLCase_o & ebLCase_d & ebLCase_e))
+	If c.AttribExists(Keyboard.Name & ebDot & ebUCase_C & ebLCase_a & ebLCase_p & ebLCase_s & ebUCase_L & ebLCase_o & ebLCase_c & ebLCase_k) Then KeyboardKeyboardDeviceInfo.CapsLock = CLng(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_C & ebLCase_a & ebLCase_p & ebLCase_s & ebUCase_L & ebLCase_o & ebLCase_c & ebLCase_k))
+	If c.AttribExists(Keyboard.Name & ebDot & ebUCase_N & ebLCase_u & ebLCase_m & ebUCase_L & ebLCase_o & ebLCase_c & ebLCase_k) Then KeyboardKeyboardDeviceInfo.NumLock = CLng(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_N & ebLCase_u & ebLCase_m & ebUCase_L & ebLCase_o & ebLCase_c & ebLCase_k))
+	If c.AttribExists(Keyboard.Name & ebDot & ebUCase_E & ebLCase_m & ebLCase_u & ebLCase_l & ebLCase_a & ebLCase_t & ebLCase_e & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_N & ebLCase_a & ebLCase_m & ebLCase_e) Then KeyboardKeyboardDeviceInfo.EmulateDeviceName = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_E & ebLCase_m & ebLCase_u & ebLCase_l & ebLCase_a & ebLCase_t & ebLCase_e & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_N & ebLCase_a & ebLCase_m & ebLCase_e)
+	
+	'Open the device, unless the context values indicate otherwise
+	Dim KeyboardOpen As Boolean
+	KeyboardOpen = True
+	If c.AttribExists(Keyboard.Name & ebDot & ebUCase_O & ebLCase_p & ebLCase_e & ebLCase_n) Then KeyboardOpen = CLogical(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_O & ebLCase_p & ebLCase_e & ebLCase_n))
+	If KeyboardOpen = True Then
+		Keyboard.Open KeyboardKeyboardDeviceInfo
+#If RUNTIME_VERSION_PERSIST >= 201 Then
+		Keyboard.RTAdjustment = 0
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_R & ebUCase_T & ebUCase_A & ebLCase_d & ebLCase_j & ebLCase_u & ebLCase_s & ebLCase_t & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t) Then Keyboard.RTAdjustment = CLng(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_R & ebUCase_T & ebUCase_A & ebLCase_d & ebLCase_j & ebLCase_u & ebLCase_s & ebLCase_t & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t))
+	#End If
+
+		Keyboard.AutoResponseEnabled = True
+		Keyboard.AutoResponseTimeLimitLowerBound = ebDigit_2 & ebDigit_5 & ebPercent
+		Keyboard.AutoResponseTimeLimitUpperBound = ebDigit_7 & ebDigit_5 & ebPercent
+		Keyboard.AutoResponseTimeLimitWhenInfinite = 1000
+		Keyboard.AutoResponseCorrectProbability = ebDigit_8 & ebDigit_0 & ebPercent
+		Keyboard.AutoResponseAllowableOverride = ebEmptyText
+		Keyboard.AutoResponseMaxCountLowerBound = ebDigit_2 & ebDigit_5 & ebPercent
+		Keyboard.AutoResponseMaxCountUpperBound = ebDigit_7 & ebDigit_5 & ebPercent
+		Keyboard.AutoResponseDelayBetweenResponses = 30
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_E & ebLCase_n & ebLCase_a & ebLCase_b & ebLCase_l & ebLCase_e & ebLCase_d) Then Keyboard.AutoResponseEnabled = CLogical(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_E & ebLCase_n & ebLCase_a & ebLCase_b & ebLCase_l & ebLCase_e & ebLCase_d))
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_T & ebLCase_i & ebLCase_m & ebLCase_e & ebUCase_L & ebLCase_i & ebLCase_m & ebLCase_i & ebLCase_t & ebUCase_L & ebLCase_o & ebLCase_w & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d) Then Keyboard.AutoResponseTimeLimitLowerBound = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_T & ebLCase_i & ebLCase_m & ebLCase_e & ebUCase_L & ebLCase_i & ebLCase_m & ebLCase_i & ebLCase_t & ebUCase_L & ebLCase_o & ebLCase_w & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_T & ebLCase_i & ebLCase_m & ebLCase_e & ebUCase_L & ebLCase_i & ebLCase_m & ebLCase_i & ebLCase_t & ebUCase_U & ebLCase_p & ebLCase_p & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d) Then Keyboard.AutoResponseTimeLimitUpperBound = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_T & ebLCase_i & ebLCase_m & ebLCase_e & ebUCase_L & ebLCase_i & ebLCase_m & ebLCase_i & ebLCase_t & ebUCase_U & ebLCase_p & ebLCase_p & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_T & ebLCase_i & ebLCase_m & ebLCase_e & ebUCase_L & ebLCase_i & ebLCase_m & ebLCase_i & ebLCase_t & ebUCase_W & ebLCase_h & ebLCase_e & ebLCase_n & ebUCase_I & ebLCase_n & ebLCase_f & ebLCase_i & ebLCase_n & ebLCase_i & ebLCase_t & ebLCase_e) Then Keyboard.AutoResponseTimeLimitWhenInfinite = CLng(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_T & ebLCase_i & ebLCase_m & ebLCase_e & ebUCase_L & ebLCase_i & ebLCase_m & ebLCase_i & ebLCase_t & ebUCase_W & ebLCase_h & ebLCase_e & ebLCase_n & ebUCase_I & ebLCase_n & ebLCase_f & ebLCase_i & ebLCase_n & ebLCase_i & ebLCase_t & ebLCase_e))
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_C & ebLCase_o & ebLCase_r & ebLCase_r & ebLCase_e & ebLCase_c & ebLCase_t & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_b & ebLCase_a & ebLCase_b & ebLCase_i & ebLCase_l & ebLCase_i & ebLCase_t & ebLCase_y) Then Keyboard.AutoResponseCorrectProbability = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_C & ebLCase_o & ebLCase_r & ebLCase_r & ebLCase_e & ebLCase_c & ebLCase_t & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_b & ebLCase_a & ebLCase_b & ebLCase_i & ebLCase_l & ebLCase_i & ebLCase_t & ebLCase_y)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_A & ebLCase_l & ebLCase_l & ebLCase_o & ebLCase_w & ebLCase_a & ebLCase_b & ebLCase_l & ebLCase_e & ebUCase_O & ebLCase_v & ebLCase_e & ebLCase_r & ebLCase_r & ebLCase_i & ebLCase_d & ebLCase_e) Then Keyboard.AutoResponseAllowableOverride = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_A & ebLCase_l & ebLCase_l & ebLCase_o & ebLCase_w & ebLCase_a & ebLCase_b & ebLCase_l & ebLCase_e & ebUCase_O & ebLCase_v & ebLCase_e & ebLCase_r & ebLCase_r & ebLCase_i & ebLCase_d & ebLCase_e)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_M & ebLCase_a & ebLCase_x & ebUCase_C & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_t & ebUCase_L & ebLCase_o & ebLCase_w & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d) Then Keyboard.AutoResponseMaxCountLowerBound = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_M & ebLCase_a & ebLCase_x & ebUCase_C & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_t & ebUCase_L & ebLCase_o & ebLCase_w & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_M & ebLCase_a & ebLCase_x & ebUCase_C & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_t & ebUCase_U & ebLCase_p & ebLCase_p & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d) Then Keyboard.AutoResponseMaxCountUpperBound = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_M & ebLCase_a & ebLCase_x & ebUCase_C & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_t & ebUCase_U & ebLCase_p & ebLCase_p & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_D & ebLCase_e & ebLCase_l & ebLCase_a & ebLCase_y & ebUCase_B & ebLCase_e & ebLCase_t & ebLCase_w & ebLCase_e & ebLCase_e & ebLCase_n & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebLCase_s) Then Keyboard.AutoResponseDelayBetweenResponses = CLng(c.GetAttrib(Keyboard.Name & ebDot & ebUCase_A & ebLCase_u & ebLCase_t & ebLCase_o & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebUCase_D & ebLCase_e & ebLCase_l & ebLCase_a & ebLCase_y & ebUCase_B & ebLCase_e & ebLCase_t & ebLCase_w & ebLCase_e & ebLCase_e & ebLCase_n & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_p & ebLCase_o & ebLCase_n & ebLCase_s & ebLCase_e & ebLCase_s))
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_S & ebLCase_y & ebLCase_s & ebLCase_t & ebLCase_e & ebLCase_m & ebUCase_A & ebLCase_b & ebLCase_o & ebLCase_r & ebLCase_t & ebUCase_W & ebLCase_a & ebLCase_t & ebLCase_c & ebLCase_h & ebUCase_S & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_n & ebLCase_c & ebLCase_e) Then Keyboard.SystemAbortWatchSequence = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_S & ebLCase_y & ebLCase_s & ebLCase_t & ebLCase_e & ebLCase_m & ebUCase_A & ebLCase_b & ebLCase_o & ebLCase_r & ebLCase_t & ebUCase_W & ebLCase_a & ebLCase_t & ebLCase_c & ebLCase_h & ebUCase_S & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_n & ebLCase_c & ebLCase_e)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_C & ebLCase_o & ebLCase_n & ebLCase_d & ebLCase_i & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_a & ebLCase_l & ebUCase_E & ebLCase_x & ebLCase_i & ebLCase_t & ebUCase_S & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_n & ebLCase_c & ebLCase_e) Then Keyboard.ConditionalExitSequence = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_C & ebLCase_o & ebLCase_n & ebLCase_d & ebLCase_i & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_a & ebLCase_l & ebUCase_E & ebLCase_x & ebLCase_i & ebLCase_t & ebUCase_S & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_n & ebLCase_c & ebLCase_e)
+		If c.AttribExists(Keyboard.Name & ebDot & ebUCase_U & ebLCase_s & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_r & ebLCase_e & ebLCase_a & ebLCase_k & ebUCase_S & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_n & ebLCase_c & ebLCase_e) Then Keyboard.UserBreakSequence = c.GetAttrib(Keyboard.Name & ebDot & ebUCase_U & ebLCase_s & ebLCase_e & ebLCase_r & ebUCase_B & ebLCase_r & ebLCase_e & ebLCase_a & ebLCase_k & ebUCase_S & ebLCase_e & ebLCase_q & ebLCase_u & ebLCase_e & ebLCase_n & ebLCase_c & ebLCase_e)
+	
+	End If
+
+	Set Sound = New SoundDevice
+	Sound.Name = ebUCase_S & ebLCase_o & ebLCase_u & ebLCase_n & ebLCase_d
+
+	Dim SoundSoundDeviceInfo As SoundDeviceInfo
+	SoundSoundDeviceInfo.API = ebSoundApiDirectSound
+	SoundSoundDeviceInfo.DeviceIndex = 1
+	SoundSoundDeviceInfo.Channels = 0
+	SoundSoundDeviceInfo.SamplesPerSecond = 0
+	SoundSoundDeviceInfo.BitsPerSample = 0
+	SoundSoundDeviceInfo.DeviceReserved1 = 0
+	SoundSoundDeviceInfo.DeviceReserved2 = 0
+	SoundSoundDeviceInfo.DeviceReserved3 = 0
+	SoundSoundDeviceInfo.DeviceReserved4 = 0
+	SoundSoundDeviceInfo.DeviceReservedA = ebEmptyText
+	SoundSoundDeviceInfo.DeviceReservedB = ebEmptyText
+	SoundSoundDeviceInfo.DeviceReservedC = ebEmptyText
+	SoundSoundDeviceInfo.DeviceReservedD = ebEmptyText
+
+	'Load values from context if they exist
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_A & ebUCase_P & ebUCase_I) Then SoundSoundDeviceInfo.API = c.GetAttrib(Sound.Name & ebDot & ebUCase_A & ebUCase_P & ebUCase_I)
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_I & ebLCase_n & ebLCase_d & ebLCase_e & ebLCase_x) Then SoundSoundDeviceInfo.DeviceIndex = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_I & ebLCase_n & ebLCase_d & ebLCase_e & ebLCase_x))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_C & ebLCase_h & ebLCase_a & ebLCase_n & ebLCase_n & ebLCase_e & ebLCase_l & ebLCase_s) Then SoundSoundDeviceInfo.Channels = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_C & ebLCase_h & ebLCase_a & ebLCase_n & ebLCase_n & ebLCase_e & ebLCase_l & ebLCase_s))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_S & ebLCase_a & ebLCase_m & ebLCase_p & ebLCase_l & ebLCase_e & ebLCase_s & ebUCase_P & ebLCase_e & ebLCase_r & ebUCase_S & ebLCase_e & ebLCase_c & ebLCase_o & ebLCase_n & ebLCase_d) Then SoundSoundDeviceInfo.SamplesPerSecond = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_S & ebLCase_a & ebLCase_m & ebLCase_p & ebLCase_l & ebLCase_e & ebLCase_s & ebUCase_P & ebLCase_e & ebLCase_r & ebUCase_S & ebLCase_e & ebLCase_c & ebLCase_o & ebLCase_n & ebLCase_d))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_B & ebLCase_i & ebLCase_t & ebLCase_s & ebUCase_P & ebLCase_e & ebLCase_r & ebUCase_S & ebLCase_a & ebLCase_m & ebLCase_p & ebLCase_l & ebLCase_e) Then SoundSoundDeviceInfo.BitsPerSample = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_B & ebLCase_i & ebLCase_t & ebLCase_s & ebUCase_P & ebLCase_e & ebLCase_r & ebUCase_S & ebLCase_a & ebLCase_m & ebLCase_p & ebLCase_l & ebLCase_e))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_1) Then SoundSoundDeviceInfo.DeviceReserved1 = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_1))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_2) Then SoundSoundDeviceInfo.DeviceReserved2 = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_2))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_3) Then SoundSoundDeviceInfo.DeviceReserved3 = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_3))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_4) Then SoundSoundDeviceInfo.DeviceReserved4 = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebDigit_4))
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_A) Then SoundSoundDeviceInfo.DeviceReservedA = c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_A)
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_B) Then SoundSoundDeviceInfo.DeviceReservedB = c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_B)
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_C) Then SoundSoundDeviceInfo.DeviceReservedC = c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_C)
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_D) Then SoundSoundDeviceInfo.DeviceReservedD = c.GetAttrib(Sound.Name & ebDot & ebUCase_D & ebLCase_e & ebLCase_v & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_e & ebLCase_s & ebLCase_e & ebLCase_r & ebLCase_v & ebLCase_e & ebLCase_d & ebUCase_D)
+	
+	'Open the device, unless the context values indicate otherwise
+	Dim SoundOpen As Boolean
+	SoundOpen = True
+	If c.AttribExists(Sound.Name & ebDot & ebUCase_O & ebLCase_p & ebLCase_e & ebLCase_n) Then SoundOpen = CLogical(c.GetAttrib(Sound.Name & ebDot & ebUCase_O & ebLCase_p & ebLCase_e & ebLCase_n))
+	If SoundOpen = True Then
+		Sound.Open SoundSoundDeviceInfo
+#If RUNTIME_VERSION_PERSIST >= 201 Then
+		Sound.RTAdjustment = 0
+		If c.AttribExists(Sound.Name & ebDot & ebUCase_R & ebUCase_T & ebUCase_A & ebLCase_d & ebLCase_j & ebLCase_u & ebLCase_s & ebLCase_t & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t) Then Sound.RTAdjustment = CLng(c.GetAttrib(Sound.Name & ebDot & ebUCase_R & ebUCase_T & ebUCase_A & ebLCase_d & ebLCase_j & ebLCase_u & ebLCase_s & ebLCase_t & ebLCase_m & ebLCase_e & ebLCase_n & ebLCase_t))
+	#End If
+	End If
+
+	'Init All Devices
+	Rte.DeviceManager.Init
+
+	' Log DisplayDevice(s) Refresh Rates
+	If DisplayOpen = True Then
+		c.SetAttrib Display.Name & ebDot & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_R & ebLCase_a & ebLCase_t & ebLCase_e, Format$(Display.CalculatedRefreshRate, ebDigit_0 & ebDot & ebDigit_0 & ebDigit_0 & ebDigit_0)
+
+		'Ensure that the refresh rate is acceptable
+		If CLng(Display.CalculatedRefreshRate) = 0 Then
+			' Because 'Throw error if invalid refresh rate' in the display device is set to 'No',
+			' E-Prime allows us to continue even though the refresh rate is bad.
+		End If
+
+		'Determine RefreshRate range
+		Dim dblDisplayMinRefreshRate As Double
+		Dim dblDisplayMaxRefreshRate As Double
+		dblDisplayMinRefreshRate = 39
+		dblDisplayMaxRefreshRate = 201
+		If c.AttribExists(Display.Name & ebDot & ebUCase_M & ebLCase_i & ebLCase_n & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_R & ebLCase_a & ebLCase_t & ebLCase_e) Then dblDisplayMinRefreshRate = CDbl(c.GetAttrib(Display.Name & ebDot & ebUCase_M & ebLCase_i & ebLCase_n & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_R & ebLCase_a & ebLCase_t & ebLCase_e))
+		If c.AttribExists(Display.Name & ebDot & ebUCase_M & ebLCase_a & ebLCase_x & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_R & ebLCase_a & ebLCase_t & ebLCase_e) Then dblDisplayMaxRefreshRate = CDbl(c.GetAttrib(Display.Name & ebDot & ebUCase_M & ebLCase_a & ebLCase_x & ebUCase_R & ebLCase_e & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_s & ebLCase_h & ebUCase_R & ebLCase_a & ebLCase_t & ebLCase_e))
+
+		'Ensure that the refresh rate is within range
+		If Display.CalculatedRefreshRate < dblDisplayMinRefreshRate Or Display.CalculatedRefreshRate > dblDisplayMaxRefreshRate Then
+			' Because 'Throw error if invalid refresh rate' in the display device is set to 'No',
+			' E-Prime allows us to continue even though the refresh rate is bad.
+		End If
+	End If
+
+End Sub
+
+
+
+'--------------------------------------------------------------------------
+' InitObjects
+'
+'--------------------------------------------------------------------------
+Sub InitObjects(c As Context)
+
+	Set SessionProc = New Procedure
+	SessionProc.Name = ebUCase_S & ebLCase_e & ebLCase_s & ebLCase_s & ebLCase_i & ebLCase_o & ebLCase_n & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_c
+	'{810BE0B5-11F4-4A9C-9350-B529864B61E0}
+	SessionProc.Guid = CGuid(&H810BE0B5, &H11F4, &H4A9C, &H9350, &HB529864B, &H61E0)
+	SessionProc.Tag = ebEmptyText
+
+	SessionProc.LoadProperties
+	SessionProc.Subroutine = ebUCase_S & ebLCase_e & ebLCase_s & ebLCase_s & ebLCase_i & ebLCase_o & ebLCase_n & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_c & ebUnderscore & ebUCase_R & ebLCase_u & ebLCase_n
+Set SessionProc_theCollection = New RteCollection
+
+	Set ListeningTask = New List
+	ListeningTask.Name = ebUCase_L & ebLCase_i & ebLCase_s & ebLCase_t & ebLCase_e & ebLCase_n & ebLCase_i & ebLCase_n & ebLCase_g & ebUCase_T & ebLCase_a & ebLCase_s & ebLCase_k
+	'{8DAE18C9-4FFF-4E6B-8194-38CE44F63A6D}
+	ListeningTask.Guid = CGuid(&H8DAE18C9, &H4FFF, &H4E6B, &H8194, &H38CE44F6, &H3A6D)
+	ListeningTask.Tag = ebEmptyText
+
+	'Initialization for ListeningTask
+	
+	Set ListeningTask.Order = New SequentialOrder
+	Set ListeningTask.Deletion = PickOne(c.GetAttrib("Subject"))
+	ListeningTask.ResetEveryRun = True
+
+	ListeningTask.LoadProperties
+
+	Set ListeningTask.TerminateCondition = Samples(1)
+	Set ListeningTask.ResetCondition = Samples(1)
+	ListeningTask.Reset
+	
+	Set LTproc = New Procedure
+	LTproc.Name = ebUCase_L & ebUCase_T & ebLCase_p & ebLCase_r & ebLCase_o & ebLCase_c
+	'{18E76B8E-3C83-4689-8E57-0EE03379EBDA}
+	LTproc.Guid = CGuid(&H18E76B8E, &H3C83, &H4689, &H8E57, &H0EE03379, &HEBDA)
+	LTproc.Tag = ebEmptyText
+
+	LTproc.LoadProperties
+	LTproc.Subroutine = ebUCase_L & ebUCase_T & ebLCase_p & ebLCase_r & ebLCase_o & ebLCase_c & ebUnderscore & ebUCase_R & ebLCase_u & ebLCase_n
+Set LTproc_theCollection = New RteCollection
+
+	Set IntroInstructions1 = New Slide
+	IntroInstructions1.Name = ebUCase_I & ebLCase_n & ebLCase_t & ebLCase_r & ebLCase_o & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t & ebLCase_r & ebLCase_u & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_s & ebDigit_1
+	'{ACCB2525-4212-4FA4-9E40-2D49AD552903}
+	IntroInstructions1.Guid = CGuid(&HACCB2525, &H4212, &H4FA4, &H9E40, &H2D49AD55, &H2903)
+	IntroInstructions1.Tag = ebEmptyText
+
+	Set IntroInstructions1EchoClients = New EchoClientCollection
+
+	IntroInstructions1.LoadProperties
+
+	Set IntroInstructions2 = New Slide
+	IntroInstructions2.Name = ebUCase_I & ebLCase_n & ebLCase_t & ebLCase_r & ebLCase_o & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t & ebLCase_r & ebLCase_u & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_s & ebDigit_2
+	'{511C622D-CBC1-46E4-9885-61905591D03B}
+	IntroInstructions2.Guid = CGuid(&H511C622D, &HCBC1, &H46E4, &H9885, &H61905591, &HD03B)
+	IntroInstructions2.Tag = ebEmptyText
+
+	Set IntroInstructions2EchoClients = New EchoClientCollection
+
+	IntroInstructions2.LoadProperties
+
+	Set IntroInstructions3 = New Slide
+	IntroInstructions3.Name = ebUCase_I & ebLCase_n & ebLCase_t & ebLCase_r & ebLCase_o & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t & ebLCase_r & ebLCase_u & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_s & ebDigit_3
+	'{B249A145-1F2B-4FC4-BFF7-FD2DA0D874BF}
+	IntroInstructions3.Guid = CGuid(&HB249A145, &H1F2B, &H4FC4, &HBFF7, &HFD2DA0D8, &H74BF)
+	IntroInstructions3.Tag = ebEmptyText
+
+	Set IntroInstructions3EchoClients = New EchoClientCollection
+
+	IntroInstructions3.LoadProperties
+
+	Set IntroInstructions4 = New Slide
+	IntroInstructions4.Name = ebUCase_I & ebLCase_n & ebLCase_t & ebLCase_r & ebLCase_o & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t & ebLCase_r & ebLCase_u & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_s & ebDigit_4
+	'{FB8F9C8D-ADE3-4DEF-8711-DAC88499EBD3}
+	IntroInstructions4.Guid = CGuid(&HFB8F9C8D, &HADE3, &H4DEF, &H8711, &HDAC88499, &HEBD3)
+	IntroInstructions4.Tag = ebEmptyText
+
+	Set IntroInstructions4EchoClients = New EchoClientCollection
+
+	IntroInstructions4.LoadProperties
+
+	Set IntroInstructions7 = New Slide
+	IntroInstructions7.Name = ebUCase_I & ebLCase_n & ebLCase_t & ebLCase_r & ebLCase_o & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t & ebLCase_r & ebLCase_u & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_s & ebDigit_7
+	'{2F293743-A98B-4B48-9FD6-862F6AD818CB}
+	IntroInstructions7.Guid = CGuid(&H2F293743, &HA98B, &H4B48, &H9FD6, &H862F6AD8, &H18CB)
+	IntroInstructions7.Tag = ebEmptyText
+
+	Set IntroInstructions7EchoClients = New EchoClientCollection
+
+	IntroInstructions7.LoadProperties
+
+	Set PracticeNaiv = New List
+	PracticeNaiv.Name = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_N & ebLCase_a & ebLCase_i & ebLCase_v
+	'{7A2082CF-2365-4574-AE82-1542D945F184}
+	PracticeNaiv.Guid = CGuid(&H7A2082CF, &H2365, &H4574, &HAE82, &H1542D945, &HF184)
+	PracticeNaiv.Tag = ebEmptyText
+
+	'Initialization for PracticeNaiv
+	
+	Set PracticeNaiv.Order = New RandomOrder
+	CRandomOrder(PracticeNaiv.Order).NoRepeatAfterReset = True
+	Set PracticeNaiv.Deletion = NoDeletion
+	PracticeNaiv.ResetEveryRun = False
+
+	PracticeNaiv.LoadProperties
+
+	Set PracticeNaiv.TerminateCondition = Cycles(1)
+	Set PracticeNaiv.ResetCondition = Samples(2)
+	PracticeNaiv.Reset
+	
+	Set raw = New List
+	raw.Name = ebLCase_r & ebLCase_a & ebLCase_w
+	'{75DFB301-3C76-49A8-A159-430B25B7AC6E}
+	raw.Guid = CGuid(&H75DFB301, &H3C76, &H49A8, &HA159, &H430B25B7, &HAC6E)
+	raw.Tag = ebEmptyText
+
+	'Initialization for raw
+	
+	Set raw.Order = New RandomOrder
+	CRandomOrder(raw.Order).NoRepeatAfterReset = True
+	Set raw.Deletion = NoDeletion
+	raw.ResetEveryRun = False
+
+	raw.LoadProperties
+
+	Set raw.TerminateCondition = Cycles(1)
+	Set raw.ResetCondition = Samples(118)
+	raw.Reset
+	
+	Set naivProc = New Procedure
+	naivProc.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_c
+	'{6A06BB19-E2E2-4AD0-8916-73D05094CE2A}
+	naivProc.Guid = CGuid(&H6A06BB19, &HE2E2, &H4AD0, &H8916, &H73D05094, &HCE2A)
+	naivProc.Tag = ebEmptyText
+
+	naivProc.LoadProperties
+	naivProc.Subroutine = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_c & ebUnderscore & ebUCase_R & ebLCase_u & ebLCase_n
+Set naivProc_theCollection = New RteCollection
+
+	Set PracticeTrackInst = New Slide
+	PracticeTrackInst.Name = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_T & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_k & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t
+	'{7866DED3-BD53-442B-8ACE-497687AD22ED}
+	PracticeTrackInst.Guid = CGuid(&H7866DED3, &HBD53, &H442B, &H8ACE, &H497687AD, &H22ED)
+	PracticeTrackInst.Tag = ebEmptyText
+
+	Set PracticeTrackInstEchoClients = New EchoClientCollection
+
+	PracticeTrackInst.LoadProperties
+
+	Set PlayTrack = New Slide
+	PlayTrack.Name = ebUCase_P & ebLCase_l & ebLCase_a & ebLCase_y & ebUCase_T & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_k
+	'{664E763A-88A5-4054-876B-3ACD1BD0E261}
+	PlayTrack.Guid = CGuid(&H664E763A, &H88A5, &H4054, &H876B, &H3ACD1BD0, &HE261)
+	PlayTrack.Tag = ebEmptyText
+
+	Set PlayTrackEchoClients = New EchoClientCollection
+
+	PlayTrack.LoadProperties
+
+	Set PracticeQInst = New Slide
+	PracticeQInst.Name = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_Q & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t
+	'{B7842ACE-A89B-4B27-8E3C-15D3D358E6BB}
+	PracticeQInst.Guid = CGuid(&HB7842ACE, &HA89B, &H4B27, &H8E3C, &H15D3D358, &HE6BB)
+	PracticeQInst.Tag = ebEmptyText
+
+	Set PracticeQInstEchoClients = New EchoClientCollection
+
+	PracticeQInst.LoadProperties
+
+	Set naivQs = New List
+	naivQs.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_Q & ebLCase_s
+	'{E3D5C7EC-83DA-4801-A0CA-C53E8BAD8C55}
+	naivQs.Guid = CGuid(&HE3D5C7EC, &H83DA, &H4801, &HA0CA, &HC53E8BAD, &H8C55)
+	naivQs.Tag = ebEmptyText
+
+	'Initialization for naivQs
+	
+	Set naivQs.Order = New RandomOrder
+	CRandomOrder(naivQs.Order).NoRepeatAfterReset = True
+	Set naivQs.Deletion = NoDeletion
+	naivQs.ResetEveryRun = False
+
+	naivQs.LoadProperties
+
+	Set naivQs.TerminateCondition = Cycles(1)
+	Set naivQs.ResetCondition = Samples(8)
+	naivQs.Reset
+	
+	Set naivQproc = New Procedure
+	naivQproc.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_Q & ebLCase_p & ebLCase_r & ebLCase_o & ebLCase_c
+	'{DFC7C0EC-0FEE-4125-9BD0-2B636FFD8B5D}
+	naivQproc.Guid = CGuid(&HDFC7C0EC, &H0FEE, &H4125, &H9BD0, &H2B636FFD, &H8B5D)
+	naivQproc.Tag = ebEmptyText
+
+	naivQproc.LoadProperties
+	naivQproc.Subroutine = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_Q & ebLCase_p & ebLCase_r & ebLCase_o & ebLCase_c & ebUnderscore & ebUCase_R & ebLCase_u & ebLCase_n
+Set naivQproc_theCollection = New RteCollection
+
+	Set naivQ = New Slide
+	naivQ.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_Q
+	'{08624233-F6CF-47AD-8015-AEEB1B75FFD5}
+	naivQ.Guid = CGuid(&H08624233, &HF6CF, &H47AD, &H8015, &HAEEB1B75, &HFFD5)
+	naivQ.Tag = ebEmptyText
+
+	Set naivQEchoClients = New EchoClientCollection
+
+	naivQ.LoadProperties
+
+	Set naivQnote = New TextDisplay
+	naivQnote.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_Q & ebLCase_n & ebLCase_o & ebLCase_t & ebLCase_e
+	'{445E81FE-DC35-4417-8A4F-C5D419CD142A}
+	naivQnote.Guid = CGuid(&H445E81FE, &HDC35, &H4417, &H8A4F, &HC5D419CD, &H142A)
+	naivQnote.Tag = ebEmptyText
+
+	Set naivQnoteEchoClients = New EchoClientCollection
+
+	naivQnote.LoadProperties
+
+	Set PracticeQPostInst = New Slide
+	PracticeQPostInst.Name = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_Q & ebUCase_P & ebLCase_o & ebLCase_s & ebLCase_t & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t
+	'{F53B7EAC-3155-45C3-B772-D4EACE9CD054}
+	PracticeQPostInst.Guid = CGuid(&HF53B7EAC, &H3155, &H45C3, &HB772, &HD4EACE9C, &HD054)
+	PracticeQPostInst.Tag = ebEmptyText
+
+	Set PracticeQPostInstEchoClients = New EchoClientCollection
+
+	PracticeQPostInst.LoadProperties
+
+	Set naiv = New List
+	naiv.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v
+	'{2241AD4D-8CFA-4E02-9953-3C7094C226F1}
+	naiv.Guid = CGuid(&H2241AD4D, &H8CFA, &H4E02, &H9953, &H3C7094C2, &H26F1)
+	naiv.Tag = ebEmptyText
+
+	'Initialization for naiv
+	
+	Set naiv.Order = New RandomOrder
+	CRandomOrder(naiv.Order).NoRepeatAfterReset = True
+	Set naiv.Deletion = NoDeletion
+	naiv.ResetEveryRun = False
+
+	naiv.LoadProperties
+
+	Set naiv.TerminateCondition = Cycles(1)
+	Set naiv.ResetCondition = Samples(18)
+	naiv.Reset
+	
+	Set practiceRaw = New List
+	practiceRaw.Name = ebLCase_p & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_R & ebLCase_a & ebLCase_w
+	'{DAA2A45E-C85F-4BB7-B82B-C98933E32F03}
+	practiceRaw.Guid = CGuid(&HDAA2A45E, &HC85F, &H4BB7, &HB82B, &HC98933E3, &H2F03)
+	practiceRaw.Tag = ebEmptyText
+
+	'Initialization for practiceRaw
+	
+	Set practiceRaw.Order = New SequentialOrder
+	Set practiceRaw.Deletion = NoDeletion
+	practiceRaw.ResetEveryRun = False
+
+	practiceRaw.LoadProperties
+
+	Set practiceRaw.TerminateCondition = Cycles(1)
+	Set practiceRaw.ResetCondition = Samples(2)
+	practiceRaw.Reset
+	
+	Set PracProc = New Procedure
+	PracProc.Name = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_c
+	'{1490023E-508B-41DE-BC8D-316C63364200}
+	PracProc.Guid = CGuid(&H1490023E, &H508B, &H41DE, &HBC8D, &H316C6336, &H4200)
+	PracProc.Tag = ebEmptyText
+
+	PracProc.LoadProperties
+	PracProc.Subroutine = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_c & ebUnderscore & ebUCase_R & ebLCase_u & ebLCase_n
+Set PracProc_theCollection = New RteCollection
+
+	Set naivPracQs = New List
+	naivPracQs.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebUCase_Q & ebLCase_s
+	'{7D17AC43-67DD-4BFC-9FFA-5A62473730A2}
+	naivPracQs.Guid = CGuid(&H7D17AC43, &H67DD, &H4BFC, &H9FFA, &H5A624737, &H30A2)
+	naivPracQs.Tag = ebEmptyText
+
+	'Initialization for naivPracQs
+	
+	Set naivPracQs.Order = New RandomOrder
+	CRandomOrder(naivPracQs.Order).NoRepeatAfterReset = True
+	Set naivPracQs.Deletion = NoDeletion
+	naivPracQs.ResetEveryRun = False
+
+	naivPracQs.LoadProperties
+
+	Set naivPracQs.TerminateCondition = Cycles(1)
+	Set naivPracQs.ResetCondition = Samples(8)
+	naivPracQs.Reset
+	
+	Set PracQproc = New Procedure
+	PracQproc.Name = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebUCase_Q & ebLCase_p & ebLCase_r & ebLCase_o & ebLCase_c
+	'{B4CF95B0-9B78-4C1C-BE09-F735D08DBE21}
+	PracQproc.Guid = CGuid(&HB4CF95B0, &H9B78, &H4C1C, &HBE09, &HF735D08D, &HBE21)
+	PracQproc.Tag = ebEmptyText
+
+	PracQproc.LoadProperties
+	PracQproc.Subroutine = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebUCase_Q & ebLCase_p & ebLCase_r & ebLCase_o & ebLCase_c & ebUnderscore & ebUCase_R & ebLCase_u & ebLCase_n
+Set PracQproc_theCollection = New RteCollection
+
+	Set PracQ = New Slide
+	PracQ.Name = ebUCase_P & ebLCase_r & ebLCase_a & ebLCase_c & ebUCase_Q
+	'{1495327C-B3A0-4336-AE19-B9396D7D1E02}
+	PracQ.Guid = CGuid(&H1495327C, &HB3A0, &H4336, &HAE19, &HB9396D7D, &H1E02)
+	PracQ.Tag = ebEmptyText
+
+	Set PracQEchoClients = New EchoClientCollection
+
+	PracQ.LoadProperties
+
+	Set flute = New List
+	flute.Name = ebLCase_f & ebLCase_l & ebLCase_u & ebLCase_t & ebLCase_e
+	'{7D72BE2D-32C9-4122-B2F9-72C199114A4A}
+	flute.Guid = CGuid(&H7D72BE2D, &H32C9, &H4122, &HB2F9, &H72C19911, &H4A4A)
+	flute.Tag = ebEmptyText
+
+	'Initialization for flute
+	
+	Set flute.Order = New RandomOrder
+	CRandomOrder(flute.Order).NoRepeatAfterReset = True
+	Set flute.Deletion = NoDeletion
+	flute.ResetEveryRun = False
+
+	flute.LoadProperties
+
+	Set flute.TerminateCondition = Cycles(1)
+	Set flute.ResetCondition = Samples(118)
+	flute.Reset
+	
+	Set ReadyToPlay = New TextDisplay
+	ReadyToPlay.Name = ebUCase_R & ebLCase_e & ebLCase_a & ebLCase_d & ebLCase_y & ebUCase_T & ebLCase_o & ebUCase_P & ebLCase_l & ebLCase_a & ebLCase_y
+	'{838996A2-2BF5-43E0-BD35-3FB665D377AA}
+	ReadyToPlay.Guid = CGuid(&H838996A2, &H2BF5, &H43E0, &HBD35, &H3FB665D3, &H77AA)
+	ReadyToPlay.Tag = ebEmptyText
+
+	Set ReadyToPlayEchoClients = New EchoClientCollection
+
+	ReadyToPlay.LoadProperties
+
+	Set naivQfree = New TextDisplay
+	naivQfree.Name = ebLCase_n & ebLCase_a & ebLCase_i & ebLCase_v & ebUCase_Q & ebLCase_f & ebLCase_r & ebLCase_e & ebLCase_e
+	'{8BB9F5A5-BD6D-4793-908A-B5D2B32C6CF8}
+	naivQfree.Guid = CGuid(&H8BB9F5A5, &HBD6D, &H4793, &H908A, &HB5D2B32C, &H6CF8)
+	naivQfree.Tag = ebEmptyText
+
+	Set naivQfreeEchoClients = New EchoClientCollection
+
+	naivQfree.LoadProperties
+
+	Set IntroInstructions5 = New Slide
+	IntroInstructions5.Name = ebUCase_I & ebLCase_n & ebLCase_t & ebLCase_r & ebLCase_o & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t & ebLCase_r & ebLCase_u & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_s & ebDigit_5
+	'{183E9276-4C25-4EAC-8C97-96F9A632323D}
+	IntroInstructions5.Guid = CGuid(&H183E9276, &H4C25, &H4EAC, &H8C97, &H96F9A632, &H323D)
+	IntroInstructions5.Tag = ebEmptyText
+
+	Set IntroInstructions5EchoClients = New EchoClientCollection
+
+	IntroInstructions5.LoadProperties
+
+	Set IntroInstructions6 = New Slide
+	IntroInstructions6.Name = ebUCase_I & ebLCase_n & ebLCase_t & ebLCase_r & ebLCase_o & ebUCase_I & ebLCase_n & ebLCase_s & ebLCase_t & ebLCase_r & ebLCase_u & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_s & ebDigit_6
+	'{24A4814D-CFAB-4B93-8098-B958BEC89905}
+	IntroInstructions6.Guid = CGuid(&H24A4814D, &HCFAB, &H4B93, &H8098, &HB958BEC8, &H9905)
+	IntroInstructions6.Tag = ebEmptyText
+
+	Set IntroInstructions6EchoClients = New EchoClientCollection
+
+	IntroInstructions6.LoadProperties
+
+	Set practiceSynth = New List
+	practiceSynth.Name = ebLCase_p & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_t & ebLCase_i & ebLCase_c & ebLCase_e & ebUCase_S & ebLCase_y & ebLCase_n & ebLCase_t & ebLCase_h
+	'{F1B4864E-54F7-424F-98F6-EAF4DD1EB635}
+	practiceSynth.Guid = CGuid(&HF1B4864E, &H54F7, &H424F, &H98F6, &HEAF4DD1E, &HB635)
+	practiceSynth.Tag = ebEmptyText
+
+	'Initialization for practiceSynth
+	
+	Set practiceSynth.Order = New SequentialOrder
+	Set practiceSynth.Deletion = NoDeletion
+	practiceSynth.ResetEveryRun = False
+
+	practiceSynth.LoadProperties
+
+	Set practiceSynth.TerminateCondition = Cycles(1)
+	Set practiceSynth.ResetCondition = Samples(2)
+	practiceSynth.Reset
+	
+	Set EndTrack = New TextDisplay
+	EndTrack.Name = ebUCase_E & ebLCase_n & ebLCase_d & ebUCase_T & ebLCase_r & ebLCase_a & ebLCase_c & ebLCase_k
+	'{C305D1C0-3F2F-4573-956D-0AA81A5E484C}
+	EndTrack.Guid = CGuid(&HC305D1C0, &H3F2F, &H4573, &H956D, &H0AA81A5E, &H484C)
+	EndTrack.Tag = ebEmptyText
+
+	Set EndTrackEchoClients = New EchoClientCollection
+
+	EndTrack.LoadProperties
+
+	Set StartNaiv = New TextDisplay
+	StartNaiv.Name = ebUCase_S & ebLCase_t & ebLCase_a & ebLCase_r & ebLCase_t & ebUCase_N & ebLCase_a & ebLCase_i & ebLCase_v
+	'{0816C0ED-14DD-4481-A751-EA5077E2CAE2}
+	StartNaiv.Guid = CGuid(&H0816C0ED, &H14DD, &H4481, &HA751, &HEA5077E2, &HCAE2)
+	StartNaiv.Tag = ebEmptyText
+
+	Set StartNaivEchoClients = New EchoClientCollection
+
+	StartNaiv.LoadProperties
+
+	Set RecheckButtonComp = New Slide
+	RecheckButtonComp.Name = ebUCase_R & ebLCase_e & ebLCase_c & ebLCase_h & ebLCase_e & ebLCase_c & ebLCase_k & ebUCase_B & ebLCase_u & ebLCase_t & ebLCase_t & ebLCase_o & ebLCase_n & ebUCase_C & ebLCase_o & ebLCase_m & ebLCase_p
+	'{7D4E6739-3A54-4794-982F-C7F19137D72D}
+	RecheckButtonComp.Guid = CGuid(&H7D4E6739, &H3A54, &H4794, &H982F, &HC7F19137, &HD72D)
+	RecheckButtonComp.Tag = ebEmptyText
+
+	Set RecheckButtonCompEchoClients = New EchoClientCollection
+
+	RecheckButtonComp.LoadProperties
+
+
+End Sub
+
+
+'--------------------------------------------------------------------------
+' InitPackages
+'
+'--------------------------------------------------------------------------
+Sub InitPackages(c As Context)
+
+End Sub
+
+
+
+'--------------------------------------------------------------------------
+' InitGlobals
+'
+'--------------------------------------------------------------------------
+Sub InitGlobals(c As Context)
+
+
+	'Assign Context to the StartupInfo object
+	Set Rte.StartupInfo.Context = c
+
+	'Load and Transfer external StartupInfo
+	Rte.StartupInfo.Load
+	'E-Studio is not configured to load .StartupInfo items
+	'To change this property, go to Experiment->Startup Info
+
+End Sub
+
+
+
+'--------------------------------------------------------------------------
+
+
+'--------------------------------------------------------------------------
+'--------------------------------------------------------------------------
+' UnInitGlobals
+'--------------------------------------------------------------------------
+Sub UnInitGlobals()
+
+	'Close the external StartupInfo
+	Rte.StartupInfo.Close
+
+End Sub
+'--------------------------------------------------------------------------
+' UnInitDevices
+'--------------------------------------------------------------------------
+Sub UnInitDevices()
+
+	'UnInit All Devices
+	Rte.DeviceManager.UnInit
+	Display.Close
+	Set Display = Nothing
+	Set DisplayEchoClients = Nothing
+	Set DisplayEchoClient = Nothing
+
+	Keyboard.Close
+	Set Keyboard = Nothing
+	Sound.Close
+End Sub
+
+
+'--------------------------------------------------------------------------
+'--------------------------------------------------------------------------
+' UnInitPackages
+'--------------------------------------------------------------------------
+Sub UnInitPackages()
+End Sub
+
+
+'--------------------------------------------------------------------------
+' UnInitObjects
+'
+'--------------------------------------------------------------------------
+Sub UnInitObjects()
+
+	Set SessionProc = Nothing
+
+	Set ListeningTask = Nothing
+
+	Set LTproc = Nothing
+
+	Set IntroInstructions1 = Nothing
+
+	Set IntroInstructions1EchoClients = Nothing
+
+	Set IntroInstructions2 = Nothing
+
+	Set IntroInstructions2EchoClients = Nothing
+
+	Set IntroInstructions3 = Nothing
+
+	Set IntroInstructions3EchoClients = Nothing
+
+	Set IntroInstructions4 = Nothing
+
+	Set IntroInstructions4EchoClients = Nothing
+
+	Set IntroInstructions7 = Nothing
+
+	Set IntroInstructions7EchoClients = Nothing
+
+	Set PracticeNaiv = Nothing
+
+	Set raw = Nothing
+
+	Set naivProc = Nothing
+
+	Set PracticeTrackInst = Nothing
+
+	Set PracticeTrackInstEchoClients = Nothing
+
+	Set PlayTrack = Nothing
+
+	Set PlayTrackEchoClients = Nothing
+
+	Set PracticeQInst = Nothing
+
+	Set PracticeQInstEchoClients = Nothing
+
+	Set naivQs = Nothing
+
+	Set naivQproc = Nothing
+
+	Set naivQ = Nothing
+
+	Set naivQEchoClients = Nothing
+
+	Set naivQnote = Nothing
+
+	Set naivQnoteEchoClients = Nothing
+
+	Set PracticeQPostInst = Nothing
+
+	Set PracticeQPostInstEchoClients = Nothing
+
+	Set naiv = Nothing
+
+	Set practiceRaw = Nothing
+
+	Set PracProc = Nothing
+
+	Set naivPracQs = Nothing
+
+	Set PracQproc = Nothing
+
+	Set PracQ = Nothing
+
+	Set PracQEchoClients = Nothing
+
+	Set flute = Nothing
+
+	Set ReadyToPlay = Nothing
+
+	Set ReadyToPlayEchoClients = Nothing
+
+	Set naivQfree = Nothing
+
+	Set naivQfreeEchoClients = Nothing
+
+	Set IntroInstructions5 = Nothing
+
+	Set IntroInstructions5EchoClients = Nothing
+
+	Set IntroInstructions6 = Nothing
+
+	Set IntroInstructions6EchoClients = Nothing
+
+	Set practiceSynth = Nothing
+
+	Set EndTrack = Nothing
+
+	Set EndTrackEchoClients = Nothing
+
+	Set StartNaiv = Nothing
+
+	Set StartNaivEchoClients = Nothing
+
+	Set RecheckButtonComp = Nothing
+
+	Set RecheckButtonCompEchoClients = Nothing
+
+
+End Sub
+
+
+'--------------------------------------------------------------------------
+' Main
+'
+'--------------------------------------------------------------------------
+Sub Main()
+
+	' Create and initialize the default context, data file,
+	' and provide global access to the context.
+	Dim c As Context
+	Set c = New Context
+	c.Name = "ebContext"
+	Set c.DataFile = New DataFile
+	c.PushNewFrame
+	Set ebContext = c
+
+	' Set the log level names
+	c.SetLogLevelName 1, "Session"
+	c.SetLogLevelName 2, "Block"
+	c.SetLogLevelName 3, "Trial"
+	c.SetLogLevelName 4, "SubTrial"
+	c.SetLogLevelName 5, "LogLevel5"
+	c.SetLogLevelName 6, "LogLevel6"
+	c.SetLogLevelName 7, "LogLevel7"
+	c.SetLogLevelName 8, "LogLevel8"
+	c.SetLogLevelName 9, "LogLevel9"
+	c.SetLogLevelName 10, "LogLevel10"
+
+	' Set standard logging items
+	ebContext.SetAttrib "Experiment", "fffield"
+	ebContext.SetAttrib "SessionDate", Date$
+	ebContext.SetAttrib "SessionTime", Time$
+	ebContext.SetAttrib "SessionStartDateTimeUtc", NowUtc()
+
+	'Initialize global variables for packages
+	InitGlobals c
+
+	' Initialize the Display Device(s) for runtime
+	Dim DisplayDisplayDeviceInfo As DisplayDeviceInfo
+	DisplayDisplayDeviceInfo.DefaultColor = Color.White
+	DisplayDisplayDeviceInfo.DisplayIndex = 1
+	If c.AttribExists(ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebDot & ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_o & ebLCase_r) Then DisplayDisplayDeviceInfo.DefaultColor = CColor(c.GetAttrib(ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebDot & ebUCase_D & ebLCase_e & ebLCase_f & ebLCase_a & ebLCase_u & ebLCase_l & ebLCase_t & ebUCase_C & ebLCase_o & ebLCase_l & ebLCase_o & ebLCase_r))
+	If c.AttribExists(ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebDot & ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebUCase_I & ebLCase_n & ebLCase_d & ebLCase_e & ebLCase_x) Then DisplayDisplayDeviceInfo.DisplayIndex = CLng(c.GetAttrib(ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebDot & ebUCase_D & ebLCase_i & ebLCase_s & ebLCase_p & ebLCase_l & ebLCase_a & ebLCase_y & ebUCase_I & ebLCase_n & ebLCase_d & ebLCase_e & ebLCase_x))
+
+	
+	
+	CreateDefaultPort DisplayDisplayDeviceInfo.DefaultColor, "", DisplayDisplayDeviceInfo.DisplayIndex
+	
+	If Basic.OS = ebWin32 Then
+		WinActivate "E-Run Experiment Window"
+	End If
+
+	' Get the StartupInfo
+
+	' Set the defaults for all of the StartupInfo
+	If Not c.AttribExists("Subject") Then c.SetAttrib "Subject", "1"
+	If Not c.AttribExists("Session") Then c.SetAttrib "Session", "1"
+	If Not c.AttribExists("Group") Then c.SetAttrib "Group", "Mentawi"
+	If Not c.AttribExists("Age") Then c.SetAttrib "Age", "0"
+	If Not c.AttribExists("Sex") Then c.SetAttrib "Sex", "male"
+	If Not c.AttribExists("ResearcherID") Then c.SetAttrib "ResearcherID", ""
+
+	' Determine if StartupInfo.UseDefaults exists and is True/False to override prompts for StartupInfo parameters
+	Dim bStartupInfoUseDefaults As Boolean
+	bStartupInfoUseDefaults = False
+	If c.AttribExists("StartupInfo.UseDefaults") Then bStartupInfoUseDefaults = CLogical(c.GetAttrib("StartupInfo.UseDefaults"))
+	If Not bStartupInfoUseDefaults Then
+
+		Dim vAnswer As Variant
+StartupInfo_Begin:
+
+StartupInfoPrompt_Subject:
+		vAnswer = AskBox("Please enter the Subject Number (0=No Data Logging):", c.GetAttrib("Subject"))
+		If Not IsEmpty(vAnswer) then
+			If Not IsNumeric(vAnswer) then
+				MsgBox "Please enter an integer value"
+				GoTo StartupInfoPrompt_Subject
+			ElseIf CLng(vAnswer) < 0 Then
+				MsgBox "The value for Subject must not be less than 0"
+				GoTo StartupInfoPrompt_Subject
+			ElseIf CLng(vAnswer) > 2147483647 Then
+				MsgBox "The value for Subject must not be greater than 2147483647"
+				GoTo StartupInfoPrompt_Subject
+			End If
+		Else
+			GoTo ExperimentAbort
+		End if
+
+		c.SetAttrib "Subject", CStr(vAnswer)
+
+StartupInfoPrompt_Group:
+		Dim arrayChoicesGroup(5)
+		arrayChoicesGroup(0) = "Mentawi"
+		arrayChoicesGroup(1) = "Vanuatu"
+		arrayChoicesGroup(2) = "Bislama"
+		arrayChoicesGroup(3) = "Tsimane"
+		arrayChoicesGroup(4) = "Ethiopia"
+		vAnswer = SelectBox(, "Please enter Subject's Group:", arrayChoicesGroup)
+		If vAnswer >= 0 then
+			c.SetAttrib "Group", arrayChoicesGroup(vAnswer)
+		Else
+			GoTo ExperimentAbort
+		End If
+
+StartupInfoPrompt_Age:
+		vAnswer = AskBox("Please enter Subject's Age (1-150; 0 if unknown):", c.GetAttrib("Age"))
+		If Not IsEmpty(vAnswer) then
+			If Not IsNumeric(vAnswer) then
+				MsgBox "Please enter an integer value"
+				GoTo StartupInfoPrompt_Age
+			ElseIf CLng(vAnswer) < 0 Then
+				MsgBox "The value for Age must not be less than 0"
+				GoTo StartupInfoPrompt_Age
+			ElseIf CLng(vAnswer) > 150 Then
+				MsgBox "The value for Age must not be greater than 150"
+				GoTo StartupInfoPrompt_Age
+			End If
+		Else
+			GoTo ExperimentAbort
+		End if
+
+		c.SetAttrib "Age", CStr(vAnswer)
+
+StartupInfoPrompt_Sex:
+		Dim arrayChoicesSex(2)
+		arrayChoicesSex(0) = "male"
+		arrayChoicesSex(1) = "female"
+		vAnswer = SelectBox(, "Please enter Subject's Sex:", arrayChoicesSex)
+		If vAnswer >= 0 then
+			c.SetAttrib "Sex", arrayChoicesSex(vAnswer)
+		Else
+			GoTo ExperimentAbort
+		End If
+
+StartupInfoPrompt_ResearcherID:
+		vAnswer = AskBox("Please enter Researcher's initials:", c.GetAttrib("ResearcherID"))
+		If Not IsEmpty(vAnswer) then
+			If Len(CStr(vAnswer)) > 255 Then
+			MsgBox "The length for ResearcherID must not be greater than 255"
+				GoTo StartupInfoPrompt_ResearcherID
+			End If
+		Else
+			GoTo ExperimentAbort
+		End if
+
+		c.SetAttrib "ResearcherID", CStr(vAnswer)
+
+		' Display the summary
+		Dim strSummary As String
+		strSummary = "Subject:    " & c.GetAttrib("Subject") & "\n"
+		strSummary = strSummary & "Group:    " & c.GetAttrib("Group") & "\n"
+		strSummary = strSummary & "Age:    " & c.GetAttrib("Age") & "\n"
+		strSummary = strSummary & "Sex:    " & c.GetAttrib("Sex") & "\n"
+		strSummary = strSummary & "ResearcherID:    " & c.GetAttrib("ResearcherID") & "\n"
+		strSummary = strSummary & "\nContinue with the above startup info?"
+
+		Dim nSummaryAnswer As Integer
+		nSummaryAnswer = MsgBox(strSummary, ebYesNoCancel + ebQuestion, "Summary of Startup Info")
+		If nSummaryAnswer = ebNo Then
+				GoTo StartupInfo_Begin
+		ElseIf nSummaryAnswer = ebCancel Then
+				GoTo ExperimentAbort
+		End If
+
+	End If
+
+
+	'Assign the Clock.Scale value
+	Clock.Scale = 1.000000
+
+	'If the attribute Clock.Scale.Override exists
+	'  then use it for to set the Clock.Scale value
+	If c.AttribExists("Clock.Scale.Override") Then
+		Clock.Scale = CDbl(c.GetAttrib("Clock.Scale.Override"))
+	End If
+
+	' Set the Filenames for the data files
+	Dim strFilenameBase As String
+	Dim strFilenameRecovery As String
+	Dim strFilenameEDAT As String
+
+	'If the attribute DataFile.Filename.Override exists
+	'  then use it for the .txt and .edat2 filenames
+	If c.AttribExists("DataFile.Filename.Override") Then
+
+		' Set the default Data Filename
+		strFilenameBase = CStr(c.GetAttrib("DataFile.Filename.Override"))
+
+	Else
+
+		' Set the default Data Filename
+		strFilenameBase = c.GetAttrib("Experiment") &_ 
+				"-" &_ 
+				c.GetAttrib("Subject") &_ 
+				"-" &_ 
+				c.GetAttrib("Session")
+
+	End If
+
+	'Set the name of the data file
+	strFilenameRecovery = strFilenameBase & ".txt"
+	strFilenameEDAT = strFilenameBase & ".edat2"
+	c.DataFile.Filename = strFilenameRecovery
+	c.SetAttrib "DataFile.Basename", strFilenameBase
+
+	' If we are logging data, then prompt to overwrite the data file if it exists
+	If CLng(c.GetAttrib("Subject")) <> 0 Then
+		If FileExists(c.DataFile.Filename) Or FileExists(strFilenameEDAT) Then
+			If ebYes <> MsgBox("WARNING: The data file and/or recovery file already exists:\nFILE: " & c.DataFile.Filename & "\n\nDo you want to overwrite?", ebYesNo + ebQuestion) Then
+				GoTo ExperimentAbort
+			End If
+			' If you receive an error here then ensure that your E-Recovery (txt) file or 
+			' the edat2 file is not open and then try the experiment run again.
+			If FileExists(strFilenameEDAT) Then Kill strFilenameEDAT
+			If FileExists(c.DataFile.Filename) Then Kill c.DataFile.Filename
+		End If
+	End If
+
+	' Set defaults for RandomSeed and GroupNumber if StartupInfo did not assign their values
+	If Not c.AttribExists("RandomSeed") Then c.SetAttrib "RandomSeed", PRNG.GetSeed()
+	If Not c.AttribExists("Group") Then c.SetAttrib "Group", "1"
+
+	'Set the random seed
+	Randomize CLng(c.GetAttrib("RandomSeed"))
+
+	' Initialize Experiment Advisor Properties
+	Rte.ExperimentAdvisor.LoadProperties
+	If c.AttribExists("Rte.ExperimentAdvisor.Enabled") Then Rte.ExperimentAdvisor.Enabled = CLogical(c.GetAttrib("Rte.ExperimentAdvisor.Enabled"))
+	If c.AttribExists("Rte.ExperimentAdvisor.Filename") Then Rte.ExperimentAdvisor.Filename = CStr(c.GetAttrib("Rte.ExperimentAdvisor.Filename"))
+
+
+	Dim nPriority As Long
+	'Priority for init routines
+	nPriority = 3
+
+	'Determine if the priority should use the override value
+	If c.AttribExists("SetOSThreadPriority.Init.Override") Then
+		nPriority = c.GetAttrib("SetOSThreadPriority.Init.Override")
+	End If
+
+	'Update E-Prime Priority for INIT routines
+	SetOSThreadPriority nPriority
+
+	' Initialize all system devices, packages, and objects
+	InitDevices c
+	InitPackages c
+	InitObjects c
+
+	'Priority for start of experiment
+	nPriority = -1
+
+	'Determine if the priority should use the override value
+	If c.AttribExists("SetOSThreadPriority.Override") Then
+		nPriority = c.GetAttrib("SetOSThreadPriority.Override")
+	End If
+
+	'Update E-Prime Priority for start of experiment
+	SetOSThreadPriority nPriority
+
+	'Disable System power save mode
+	Rte.PreventSystemIdle = True
+
+	If CLng(c.GetAttrib("Subject")) < 0 Then
+		Rte.AbortExperiment 12102, ebUCase_S & ebLCase_u & ebLCase_b & ebLCase_j & ebLCase_e & ebLCase_c & ebLCase_t & ebSpace & ebLCase_c & ebLCase_a & ebLCase_n & ebLCase_n & ebLCase_o & ebLCase_t & ebSpace & ebLCase_b & ebLCase_e & ebSpace & ebLCase_l & ebLCase_e & ebLCase_s & ebLCase_s & ebSpace & ebLCase_t & ebLCase_h & ebLCase_a & ebLCase_n & ebSpace & ebDigit_0 & ebDot
+	End If
+
+	If CLng(c.GetAttrib("Session")) < 1 Then
+		Rte.AbortExperiment 12103, ebUCase_S & ebLCase_e & ebLCase_s & ebLCase_s & ebLCase_i & ebLCase_o & ebLCase_n & ebSpace & ebLCase_c & ebLCase_a & ebLCase_n & ebLCase_n & ebLCase_o & ebLCase_t & ebSpace & ebLCase_b & ebLCase_e & ebSpace & ebLCase_l & ebLCase_e & ebLCase_s & ebLCase_s & ebSpace & ebLCase_t & ebLCase_h & ebLCase_a & ebLCase_n & ebSpace & ebDigit_1 & ebDot
+	End If
+
+	' If we are logging data, then open the datafile
+	If CLng(c.GetAttrib("Subject")) <> 0 Then
+		c.DataFile.Open
+		c.LogHeader
+	End If
+
+
+	'Setup the DataFile.BaseName attribute
+	c.SetAttrib "DataFile.BaseName", Replace(c.DataFile.Filename, ".txt", ebEmptyText)
+
+	' Log clock timing information
+	c.SetAttrib "Clock.Information", Clock.Information
+
+	' Log E-Studio version
+	c.SetAttrib "StudioVersion", "2.0.10.252"
+
+	' Log runtime version.
+	c.SetAttrib "RuntimeVersion", Rte.Version.Major & ebDot & Rte.Version.Minor & ebDot & Rte.Version.Internal & ebDot & Rte.Version.Build
+	c.SetAttrib "RuntimeVersionExpected", 2 & ebDot & 0 & ebDot & 10 & ebDot & 356
+	c.SetAttrib "RuntimeCapabilities", ebUCase_P & ebLCase_r & ebLCase_o & ebLCase_f & ebLCase_e & ebLCase_s & ebLCase_s & ebLCase_i & ebLCase_o & ebLCase_n & ebLCase_a & ebLCase_l
+
+	' Log experiment version
+	c.SetAttrib "ExperimentVersion", "1.1.0.26"
+
+	' ExperimentStart
+	 Rte.ExperimentStart
+	' Start the running of the Experiment
+	SessionProc.Run c
+	' ExperimentFinish
+	 Rte.ExperimentFinish
+
+	' Clean up the context and close the datafile
+	If CLng(c.GetAttrib("Subject")) <> 0 Then
+		Dim nDataFileConvertProgress As Long
+		nDataFileConvertProgress = ebProgressSimple
+		If c.AttribExists("DataFile.ConvertProgress") Then nDataFileConvertProgress = CLng(c.GetAttrib("DataFile.ConvertProgress"))
+		c.DataFile.Close
+		' Attempt to convert the recovery file into a data file
+		Dim nConvert As Long
+		nConvert = c.DataFile.Convert(nDataFileConvertProgress)
+
+		If nConvert = 0 Then
+			' Settings in E-Studio are set to not remove E-Recovery file
+		Else
+			' The datafile failed to convert!
+			MsgBox "ERROR: The datafile did not convert!\nFILE: " & c.DataFile.Filename & "\n\nIt is recommended that you recover your data with the E-Recovery utility"
+			MsgBox c.DataFile.GetLastErrorMessage()
+		End If
+	End If
+ExperimentFinish:
+
+	UnInitObjects
+
+	UnInitPackages
+	UnInitDevices
+
+	UnInitGlobals
+
+	' Experiment Advisor Report Generation
+	If Rte.ExperimentAdvisor.Enabled = True Then
+		If Len(Rte.ExperimentAdvisor.Filename) = 0 Then Rte.ExperimentAdvisor.Filename = Replace(c.DataFile.Filename, ".txt", "-ExperimentAdvisorReport.xml")
+		Rte.ExperimentAdvisor.GenerateReport
+
+
+	End If
+
+
+ExperimentAbort:
+
+	' Clean up the context
+	c.PopFrame
+	Set c = Nothing
+	Set ebContext = Nothing
+
+	DestroyDefaultPort
+
+End Sub
+
