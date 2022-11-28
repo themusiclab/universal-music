@@ -1,4 +1,4 @@
-# Mutual intelligibility of musical communication
+# Mutual intelligibility in musical communication
 
 > **Warning**  
 > This repository is currently being populated! We will remove this message when all code and materials have been uploaded.
@@ -29,7 +29,7 @@ All raw data files are in `/data`. Identifiable information (i.e., IP addresses)
 
 Scripts for preprocessing the data are in `/analysis`. 
 
-Preprocessed data, interim datasets and the like are in `/results.`
+Preprocessed data, interim datasets and the like are in `/results`.
 
 ### Vizualizations
 
