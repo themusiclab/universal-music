@@ -1,4 +1,42 @@
 # Mutual intelligibility of musical communication
 
 > **Warning**  
-> This repository is currently being populated! We will remove this message when all data, code, and materials have been uploaded.
+> This repository is currently being populated! We will remove this message when all code and materials have been uploaded.
+
+This is the repository for Yurdum et al. (2022) "Mutual intelligibility in musical communication". The manuscript is publicly available at https://psyarxiv.com/4kdx6.
+
+You can find the following here:
+
+* an R Markdown file that generates the manuscript
+* data, analysis, and visualisation code to produce the results reported in the manuscript
+* supplementary data and materials
+* code for the smaller-scale society listener experiments and industrialised society Qualtrics surveys
+
+Further data and information are available elsewhere:
+
+* the excerpts can be downloaded from https://doi.org/10.5281/zenodo.7265514
+* the preregistration for this study is at https://osf.io/msvwz
+
+**For assistance, please contact the corresponding authors: Lidya Yurdum (lidya.yurdum@yale.edu) and Samuel Mehr (samuel.mehr@yale.edu).**
+
+## Anatomy of the repo
+
+To render the paper, run the code in `/writing/manuscript.Rmd`.
+
+## Data and analysis code
+
+All raw data files are in `/data`. Identifiable information (i.e., IP addresses) have been removed. 
+
+Scripts for preprocessing the data are in `/analysis`. 
+
+Preprocessed data, interim datasets and the like are in `/results.`
+
+### Vizualizations
+
+Vizualization code is in `/viz`, along with images and static data used for non-dynamic vizualisations.
+
+### Materials
+
+Research materials are in `/materials`, and include E-Prime code to run the listener experiment in the smaller-scale societies, and .xml files to reproduce the industrialised society Qualtrics surveys. These files can also be referred to for the translations of all materials into the 31 languages featured in the study.
+
+
