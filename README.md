@@ -32,9 +32,9 @@ Scripts for preprocessing the data are in `/analysis`.
 
 Preprocessed data, interim datasets and the like are in `/results`.
 
-### Vizualizations
+### Visualisations
 
-Vizualization code is in `/viz`, along with images and static data used for non-dynamic vizualisations.
+Visualisation code is in `/viz`, along with images and static data used for non-dynamic visualisations.
 
 ### Materials
 
