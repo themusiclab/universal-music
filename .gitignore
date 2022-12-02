@@ -12,3 +12,4 @@
 *.csv.gz
 *~*
 .Rproj.user
+analysis/bootstrap_testing.R
