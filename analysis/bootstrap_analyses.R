@@ -43,7 +43,7 @@ bootstrap_data <- map_dfr(c("danc", "baby", "heal", "love") |> set_names(), \(.s
   out <- rename(fulldata, score = {{.song_type}}) |> 
     boot::boot(correlation_extractor, R = repeats, sim = "parametric",
                ran.gen = sampler,
-               parallel = "multicore")
+               parallel = "multicore") # if you are using windows, you might need to change: parallel = "snow"
   as.numeric(out$t)
 }) |> suppressMessages()
 
