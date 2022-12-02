@@ -1185,49 +1185,6 @@ We replicated the main analyses of the industrialised society data using mixed-e
 
 Taking into account the variance accounted for by participant, stimulus and language, dance songs were rated significantly above the base rate on the "...for dancing" scale ($\beta_{dance}$ = `r ran_mods$danc$danc$estimate %>% r2`, *SE* = `r ran_mods$danc$danc$std.error %>% r2`, *t*(`r ran_mods$danc$danc$df %>% r2`) = `r ran_mods$danc$danc$statistic %>% r2`, *p* `r ran_mods$danc$danc$p.value %>% fp`), and lullabies were rated significantly below the base rate ($\beta_{baby}$ = `r ran_mods$danc$baby$estimate %>% r2`, *SE* = `r ran_mods$danc$baby$std.error %>% r2`, *t*(`r ran_mods$danc$baby$df %>% r2`) = `r ran_mods$danc$baby$statistic %>% r2`, *p* `r ran_mods$danc$baby$p.value %>% fp`). On the "...to soothe a baby" scale, lullabies were rated highest ($\beta_{baby}$ = `r  ran_mods$baby$baby$estimate %>% r2`, *SE* = `r  ran_mods$baby$baby$std.error %>% r2`, *t*(`r  ran_mods$baby$baby$df %>% r2`) = `r  ran_mods$baby$baby$statistic %>% r2`, *p* `r  ran_mods$baby$baby$p.value %>% fp`), and dance songs lowest ($\beta_{dance}$ = `r  ran_mods$baby$danc$estimate %>% r2`, *SE* = `r ran_mods$baby$danc$std.error %>% r2`, *t*(`r ran_mods$baby$danc$df %>% r2`) = `r ran_mods$baby$danc$statistic %>% r2`, *p* `r ran_mods$baby$danc$p.value %>% fp`); as in the song-level analyses, healing songs were rated below the base rate ($\beta_{heal}$ = `r ran_mods$baby$heal$estimate %>% r2`, *SE* = `r ran_mods$baby$heal$std.error %>% r2`, *t*(`r ran_mods$baby$heal$df %>% r2`) = `r ran_mods$baby$heal$statistic %>% r2`, *p* `r ran_mods$baby$heal$p.value %>% fp`). On the "...to heal illness" scale, healing songs were rated higher than the base rate ($\beta_{heal}$ = `r ran_mods$heal$heal$estimate %>% r2`, *SE* = `r ran_mods$heal$heal$std.error %>% r2`, *t*(`r ran_mods$heal$heal$df %>% r2`) = `r ran_mods$heal$heal$statistic %>% r2`, *p* `r ran_mods$heal$heal$p.value %>% fp`), whereas dance songs were rated below it ($\beta_{dance}$ = `r ran_mods$heal$danc$estimate %>% r2`, *SE* = `r ran_mods$heal$danc$std.error %>% r2`, *t*(`r ran_mods$heal$danc$df %>% r2`) = `r ran_mods$heal$danc$statistic %>% r2`, *p* `r ran_mods$heal$danc$p.value %>% fp`). Last, as in the song-level analyses, love songs were not reliably identified as "...to express love for another person" (*p* > 0.05).
 
-```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-# I ran this code with n=10000 iterations and stored the results in results/bootstrap_res.csv. To save time when knitting, the chunk of code that produced this file will be skipped, and values will be read in from the saved document. However, the relevant code that produced the values in bootstrap_res.csv can be found below, for reproducibility. 
-
-# USED FOR DANCING
-# loop n times and store all correlation coefficients in vector
-danc_cors <- c()
-for (i in 1:n) {
-  danc_cors[i] <- boot(fulldata, "danc")
-}
-
-danc_cors <- data.frame(danc_cors)
-
-# USED FOR SOOTHING A BABY
-# loop n times and store all correlation coefficients in vector
-baby_cors <- c()
-for (i in 1:n) {
-  baby_cors[i] <- boot(fulldata, "baby")
-}
-
-baby_cors <- data.frame(baby_cors)
-
-# USED FOR HEALING THE SICK
-# loop n times and store all correlation coefficients in vector
-heal_cors <- c()
-for (i in 1:n) {
-  heal_cors[i] <- boot(fulldata, "heal")
-}
-
-heal_cors <- data.frame(heal_cors)
-
-
-# USED FOR EXPRESSING LOVE
-# loop n times and store all correlation coefficients in vector
-love_cors <- c()
-for (i in 1:n) {
-  love_cors[i] <- boot(fulldata, "love")
-}
-
-love_cors <- data.frame(love_cors)
-
-```
-
-
 ```{r include=FALSE}
 # This chunk of code uses a previously generated bootstrapped dataset found in results/bootstrap_res.csv.
 boot <- read.csv(here("results", "bootstrap_res.csv"))
@@ -1258,7 +1215,7 @@ boot_plot <- function(x_var, color_var, title_var, annotation_var) {
                    fill = color_var,
                    bins = 100) + 
     geom_density() +
-    geom_vline(xintercept = 0, # aes(xintercept = mean({{x_var}})) 
+    geom_vline(xintercept = 0,
                linetype = "dashed", size = 0.6, alpha = .5) + 
     labs(title = title_var,
          x= "Correlation Coefficients", y = "Density") +
