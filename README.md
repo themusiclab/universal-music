@@ -18,17 +18,17 @@ Further data and information are available elsewhere:
 * the audio excerpts can be downloaded from https://doi.org/10.5281/zenodo.7265514
 * the preregistration is at https://osf.io/msvwz
 
-**For assistance, please contact the corresponding authors: Lidya Yurdum (lidya.yurdum@yale.edu) and Samuel Mehr (sam@yale.edu).**
+**For assistance, please contact the corresponding authors: Lidya Yurdum (lidya.yurdum@yale.edu) and Samuel Mehr (sam@yale.edu). Or for assistance with the code specifically, contact Courtney Hilton (courtney.hilton@auckland.ac.nz).**
 
 ## Anatomy of the repo
 
-To render the paper, run the code in `/writing/manuscript.Rmd`. <!-- add a note about the builder script here -->
+To render the paper, run the code in `/writing/manuscript.Rmd`. Running this script will generate the manuscript from saved outputs of analysis and visualization scripts. To run everything from the raw data (which can take a while to process), first start by running `/analysis/builder.R`, then `bootstrap_analyses.R`.
 
 ## Data and analysis code
 
 All raw data files are in `/data`. Identifiable information (i.e., IP addresses) have been removed. 
 
-Scripts for preprocessing the data are in `/analysis`. 
+Scripts for preprocessing the data are in `/analysis`.
 
 Preprocessed data, interim datasets and the like are in `/results`.
 
