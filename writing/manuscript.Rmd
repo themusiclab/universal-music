@@ -1233,7 +1233,6 @@ love_cors <- data.frame(love_cors)
 boot <- read.csv(here("results", "bootstrap_res.csv"))
 
 boot_cors <- boot %>% 
-  rename_with(~ str_extract(.x, ".*(?=_)"), everything()) %>% 
   map(~ t.test(.x, mu = 0, alternative = "greater"))
 ```
 
@@ -1275,10 +1274,10 @@ boot_plot <- function(x_var, color_var, title_var, annotation_var) {
                x = annotation_var, y = max_density + 1)
 }
 
-danc_hist <- boot_plot(danc_cors, color_scheme[1], "<i style='color:#000000;'>\"...for dancing\"</i>", average_boots$danc_cors)
-heal_hist <- boot_plot(heal_cors, color_scheme[2], "<i style='color:#000000;'>\"...to heal illness\"</i>", average_boots$heal_cors)
-love_hist <- boot_plot(love_cors, color_scheme[3], "<i style='color:#000000;'>\"...to express love for<br>another person\"</i>", average_boots$love_cors)
-baby_hist <- boot_plot(baby_cors, color_scheme[4], "<i style='color:#000000;'>\"...to soothe a baby\"</i>", average_boots$baby_cors)
+danc_hist <- boot_plot(boot$danc, color_scheme[1], "<i style='color:#000000;'>\"...for dancing\"</i>", average_boots$danc)
+heal_hist <- boot_plot(boot$heal, color_scheme[2], "<i style='color:#000000;'>\"...to heal illness\"</i>", average_boots$heal)
+love_hist <- boot_plot(boot$love, color_scheme[3], "<i style='color:#000000;'>\"...to express love for<br>another person\"</i>", average_boots$love)
+baby_hist <- boot_plot(boot$baby, color_scheme[4], "<i style='color:#000000;'>\"...to soothe a baby\"</i>", average_boots$baby)
 
 danc_hist + heal_hist + love_hist + baby_hist + 
   plot_layout(ncol = 2)
