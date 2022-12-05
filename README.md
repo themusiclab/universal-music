@@ -1,8 +1,5 @@
 # Mutual intelligibility in musical communication
 
-> **Warning**  
-> This repository is currently being populated and validated. It *should* contain everything you need, but we're not 100% sure yet. We will remove this message when all code and materials have been uploaded. In the meantime, please contact us if you have any questions or run into issues with our code.
-
 This is the repository for Yurdum et al. (2022) "Mutual intelligibility in musical communication". The manuscript is publicly available at https://psyarxiv.com/4kdx6.
 
 You can find the following here:
