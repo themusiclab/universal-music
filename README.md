@@ -1,6 +1,6 @@
-# Mutual intelligibility in musical communication
+# Universal interpretations of vocal music
 
-This is the repository for Yurdum et al. (2022) "Mutual intelligibility in musical communication". The manuscript is publicly available at https://psyarxiv.com/4kdx6.
+This is the repository for Yurdum et al. (2023) "Universal interpretations of vocal music". The manuscript is publicly available at https://psyarxiv.com/4kdx6.
 
 You can find the following here:
 
@@ -15,7 +15,7 @@ Further data and information are available elsewhere:
 * the audio excerpts can be downloaded from https://doi.org/10.5281/zenodo.7265514
 * the preregistration is at https://osf.io/msvwz
 
-**For assistance, please contact the corresponding authors: Lidya Yurdum (lidya.yurdum@yale.edu) and Samuel Mehr (sam@yale.edu). Or for assistance with the code specifically, contact Courtney Hilton (courtney.hilton@auckland.ac.nz).**
+**For assistance, please contact the corresponding authors: Lidya Yurdum (lidya.yurdum@yale.edu) and Samuel Mehr (sam@yale.edu).**
 
 ## Anatomy of the repo
 
