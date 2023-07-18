@@ -1,8 +1,8 @@
-**This repository is currently under construction post-revision. We will remove this warning when all materials are up-to-date.**
+**This repository is currently under construction pre-publication in PNAS. We will remove this warning when all materials are up-to-date.**
 
 # Universal interpretations of vocal music
 
-This is the repository for Yurdum et al. (2023) "Universal interpretations of vocal music". The manuscript is publicly available at https://psyarxiv.com/4kdx6.
+This is the repository for Yurdum et al. "Universal interpretations of vocal music" (2023, PNAS). The manuscript is publicly available at https://psyarxiv.com/4kdx6.
 
 You can find the following here:
 
@@ -17,7 +17,7 @@ Further data and information are available elsewhere:
 * the audio excerpts can be downloaded from https://doi.org/10.5281/zenodo.7265514
 * the preregistration is at https://osf.io/msvwz
 
-**For assistance, please contact the corresponding authors: Lidya Yurdum (lidya.yurdum@yale.edu) and Samuel Mehr (sam@yale.edu).**
+**For assistance, please contact the corresponding authors: Lidya Yurdum (lidya.yurdum@yale.edu) and Samuel Mehr (mehr@hey.com).**
 
 ## Anatomy of the repo
 
