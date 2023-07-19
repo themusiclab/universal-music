@@ -23,9 +23,6 @@ link-citations: yes
 output:
   pdf_document:
     number_sections: yes
-  word_document:  
-  html_document:
-    df_print: paged
 ---
 
 ```{r chunk_knit_settings, include=F}
@@ -192,7 +189,7 @@ kable(manual_table1,
   row_spec(c(7,9,12,49,50,51,53,55), hline_after = TRUE) %>%
   kable_styling(font_size = 8,
                 full_width = FALSE) %>%
-  footnote(general = "Linguistic and geographic information about the participants in the web-experiment. The ``Language'' column denotes the native language spoken by the participant (and the language they completed the experiment in); the ``Total n'' column denotes the number of participants recruited for that language; the ``Language Family'' column denotes the language family this particular language is part of, as per the Glottolog system (40). Glottolog is a comprehensive catalogue of the world's languages and their genealogy, and can be accessed at https://glottolog.org. Within each language, participants were recruited from multiple countries, as noted in the ``Country'' column. For the cultural proximity analyses, participants were then grouped into geographic subregions based on their reported location, as per the Human Relations Area Files World Sub-region typology. The ``Country-wise n'' column indicates the number of participants per language in each country.",
+  kableExtra::footnote(general = "Linguistic and geographic information about the participants in the web-experiment. The ``Language'' column denotes the native language spoken by the participant (and the language they completed the experiment in); the ``Total n'' column denotes the number of participants recruited for that language; the ``Language Family'' column denotes the language family this particular language is part of, as per the Glottolog system (40). Glottolog is a comprehensive catalogue of the world's languages and their genealogy, and can be accessed at https://glottolog.org. Within each language, participants were recruited from multiple countries, as noted in the ``Country'' column. For the cultural proximity analyses, participants were then grouped into geographic subregions based on their reported location, as per the Human Relations Area Files World Sub-region typology. The ``Country-wise n'' column indicates the number of participants per language in each country.",
            general_title = "Table 1.",
            footnote_as_chunk = TRUE,
            title_format = "bold",

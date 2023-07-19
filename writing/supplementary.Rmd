@@ -23,9 +23,6 @@ link-citations: yes
 output:
   pdf_document:
     number_sections: yes
-  word_document:
-  html_document:
-    df_print: paged
 ---
 
 ```{r chunk_knit_settings, include=F}
