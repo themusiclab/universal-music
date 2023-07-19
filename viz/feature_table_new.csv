@@ -1,0 +1,26 @@
+﻿Source,Feature,Definition,Variable Name,Behavioural Context
+Expert Annotation,,,,
+,Macrometer consistency (ordinal),"The perceived clarity of the metrical rhythmic structure (groupings of perceived strong and weak beats). Consistency of macrometer converted to ordinal scale, from ``No macrometer'' (1) to ``Totally clear macrometer'' (6).",macrometer_ord,"for dancing, to soothe a baby, to heal illness"
+,Tempo (adjusted),"The rate of salient rhythmic pulses (measured by having annotators tap the beat), adjusted to correspond with ``quarter note'' equivalent; measured in beats per minute; the perceived speed of the music. A fast song will have a high value.",tempo_adj,"for dancing, to soothe a baby, to heal illness"
+,Accent,"The differentiation of musical pulses, usually by volume or emphasis of articulation. A fluid, gentle song will have few accents and a correspondingly low value.",accent,"for dancing, to soothe a baby"
+,Triple rhythm,The presence of triple subdivisions of the beat.,micrometer_triple,"for dancing, to soothe a baby"
+,Duple rhythm,The presence of duple subdivisions of the beat.,micrometer_duple,for dancing
+,Ornamentation,Complex melodic variation or ``decoration'' of a perceived underlying musical structure. A song perceived as having ornamentation is annotated with a value of 1.,ornament,"for dancing, to soothe a baby"
+,Syncopation,"The degree of syncopation in the song (roughly equateable with ``rhythmic complexity''). Syncopation is when rhythmic accents align with metrically weak positions of a metrical beat structure (e.g., having accents half way between when people tap their foot rather than directly aligned with the foot taps).",syncopate,"for dancing, to heal illness"
+,Duple macrometer present,Duple macrometer present.,macrometer_duple,for dancing
+,Triple macrometer present,Triple macrometer present.,macrometer_triple,to heal illness
+,Tension,"The degree to which the passage is perceived to build and release tension via changes in melodic contour, harmonic progression, rhythm, motivic development, accent, or instrumentation. If so, the song is annotated with a value of 1.",tension,to heal illness
+,Vibrato present,"Presence of vibrato in the singing. Vibrato is a rapid, slight oscillation in pitch that is typically perceived as adding intensity.",vibrato,to heal illness
+Transcription,,,,
+,Variety in pitch,"A pitch class is the group of pitches that sound equivalent at different octaves, such as all the Cs, not just middle C. This variable, an indicator of melodic variety, counts the number of pitch classes that appear at least once in the song.",pitch_class_variety,for dancing
+,Melodic Thirds,Prevalence of 3 or 4 semitone intervals.,melodic_thirds,"for dancing, to heal illness"
+,Average Note Duration,"Average duration of a note, in seconds.",average_note_duration,"for dancing, to soothe a baby"
+,Overall direction of motion,"Number of rising melodic intervals divided by number of intervals that are either rising or falling—that is, fraction of moving intervals that are rising (unisons are ignored). If a piece has no moving intervals, this field is 0. This feature considers intervals across rests as contributing to the direction of motion.",direction_of_motion,"for dancing, to soothe a baby, to heal illness"
+,Pitch range,"The difference between the highest and lowest pitches, in semitones.",range,"for dancing, to soothe a baby"
+,Estimated simplified mode of the transcription,"Quality or mode of the transcription (major or minor) based on the Krumhansl-Schmuckler key-finding algorithm. This is done by finding the most likely key and then returning the mode of that key – rather than weighting the likelihood of all major and minor keys. 0 = Major, 1 = Minor.",quality,to soothe a baby
+,Prevalence of modal pitch class,"Variety versus monotony of the melody, measured by the ratio of the proportion of occurrences of the second most common pitch (collapsing across octaves) to the proportion of occurrences of the most common pitch; monotonous melodies will have low values.",modal_pitchcls_prev,"to soothe a baby, to heal illness"
+,Prevalence of stepwise motion,Fraction of melodic intervals one or two semitones in size.,stepwise_motion,"to soothe a baby, to heal illness"
+,Relative strength of most-common intervals,Fraction of melodic intervals that belong to the second most common interval divided by the fraction of melodic intervals belonging to the most common interval. This field is 0 if there are not two distinct most common melodic intervals. ,rel_strength_modal_intervals,to soothe a baby
+,Note density,"Average number of notes per second, using durations from NHSDiscography_metadata.",note_density,to soothe a baby
+,Amount of arpeggiation,"Fraction of horizontal intervals that are repeated notes, minor thirds, major thirds, perfect fifths, minor sevenths, major sevenths, octaves, minor tenths or major tenths.",amount_of_arpeggiation,to heal illness
+,Interval between modal pitch classes,"Absolute value of the difference between the two most common pitch classes, in semitones. This field is 0 if there are not two distinct most common pitches.",interval_btwn_strongest_pitchcls,to heal illness

@@ -15,6 +15,7 @@ header-includes:
 - \usepackage[symbol]{footmisc}
 - \definecolor{bleu}{HTML}{2200cc}
 - \renewcommand{\thefootnote}{\fnsymbol{footnote}}
+- \usepackage{rotating}
 notes-after-punctuation: no
 urlcolor: bleu
 linkcolor: bleu
@@ -22,7 +23,9 @@ link-citations: yes
 output:
   pdf_document:
     number_sections: yes
-  word_document: default
+  word_document:  
+  html_document:
+    df_print: paged
 ---
 
 ```{r chunk_knit_settings, include=F}
@@ -32,8 +35,9 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, cache.extr
 options(scipen = 999) # disable scientific notation
 
 ```
-
 ```{r libraries}
+
+# note, make sure {plyr} is installed: install.packages("plyr")
 
 library(pacman)
 p_load(
@@ -52,6 +56,7 @@ p_load(
   ggsignif,
   broom,
   broom.mixed,
+  glmnet,
   ggeffects,
   ggtext,
   ggnewscale,
@@ -61,8 +66,15 @@ p_load(
   rnaturalearthdata,
   sf,
   tidyverse,
-  kableExtra
+  kableExtra,
+  factoextra,
+  tidymodels
 )
+
+color_scheme <- c("#6f9acc", "#f27553", "#fccc54", "#44bb74")
+
+load(here("results", "analysis.RData"))
+load(here("results", "lasso_analyses.RData"))
 
 ```
 
@@ -93,210 +105,33 @@ f <- function(num) {format(num, big.mark = ",")}
 
 ```
 
-```{r load_data}
-
-fulldata <- read_csv(here("results", "FFfull.csv"), 
-                     col_types = "fiiffiifcccccddddddddddffffddfcccffff") %>% 
-  left_join(.,
-            read_csv(here("data", "countries.csv"),
-                     col_types = "ccc"), 
-            by = "natcountry") %>% 
-  mutate(songfunction = factor(songfunction, levels = c("danc", "baby", "heal", "love")))
-
-# data storage lists
-mods <- list()
-
-color_scheme <- c("#6f9acc", "#f27553", "#fccc54", "#44bb74")
-
-```
-
-```{r include=FALSE}
-# some participants slipped thru the Qualtrics exclusion criteria. The code below identifies 8 participants whose IP address did not match the country they reported being in. For the public repository for this data, we have removed identifying info such as IP addresses. As such, these participants have been manually removed.
-# 
-# mismatch_ips <- fulldata %>% 
-#   select(indx,geo_country_name, natcountry, listener_subregion) %>% distinct() %>% 
-#   mutate(oops = ifelse(geo_country_name != natcountry, 1,0)) %>% 
-#   filter(oops == 1 & natcountry ! = "Czech Republic" &  natcountry != "Russian Federation") %>% distinct()
-
-mismatch_ips <- c(1994, 2001, 2005, 2010, 2159, 4822, 4999, 5036) # manually remove mismatched IPs
-
-fulldata <- fulldata %>% 
-  filter(!indx %in% mismatch_ips)
-
-```
-
-
-```{r wrangling}
-
-# generate song level data for Ind. cohort confirmatory analyses
-webdat <- fulldata %>% 
-  filter(study == "web") %>% 
-  group_by(song, songfunction) %>% 
-  # averaging scores
-  summarize(across(
-    c(danc, heal, baby, love, achi, visi),
-    ~ mean(.x, na.rm = T),
-    .names = "mean_{.col}")) %>% 
-  ungroup() %>% 
-  # z-scoring
-  mutate(across(
-    c(mean_danc, mean_baby, mean_heal, mean_love),
-    ~ scale(.x),
-    .names = "zm_{.col}"
-  )) %>% 
-  rename_with(~ str_remove(.x, "mean_"), contains("zm")) %>% 
-  # dummy variables
-  mutate(var = 1, temp = songfunction,
-         songfunction = factor(songfunction, levels = c("danc", "heal", "love", "baby"))) %>% 
-  pivot_wider(names_from = temp, values_from = var, values_fill = 0)
-
-# generate song level data for SS cohort confirmatory analyses
-fieldraw <- fulldata %>% 
-  filter(study == "field")
-
-fielddat <- fieldraw %>% 
-  mutate(across(
-    c(danc, heal, baby, love),
-    # the recoding is because the field society responses were originally coded as
-    # 11,12,13 instead of 1,2,3, to avoid confusing the scale with the 4-point industrialised cohort scale. 
-    ~ recode(.x, `11` = 1, `12` = 2, `13` = 3)
-  )) %>% 
-  group_by(song, songfunction) %>% 
-  # averaging scores
-  summarize(across(
-    c(danc, heal, baby, love, achi, visi, stor, dead),
-    ~ mean(.x, na.rm = T),
-    .names = "mean_{.col}")) %>% 
-  ungroup() %>% 
-  # z-scoring
-  mutate(across(
-    c(mean_danc, mean_baby, mean_heal, mean_love),
-    ~ scale(.x),
-    .names = "zm_{.col}"
-  )) %>% 
-  rename_with(~ str_remove(.x, "mean_"), contains("zm")) %>% 
-  # dummy variables
-  mutate(var = 1, temp = songfunction) %>% 
-  pivot_wider(names_from = temp, values_from = var, values_fill = 0)
-
-webraw <- fulldata %>% 
-  filter(study == "web") %>% 
-  select(-c("stor", "dead")) %>%
-  mutate(
-    langshare = ifelse(songlang_fam == natlang_fam, "Shared", "Not shared"),
-    geoshare_sub = ifelse(song_subregion == listener_subregion, "Shared", "Not shared"),
-    geoshare_reg = ifelse(song_region == listener_region, "Shared", "Not shared")
-  ) %>% 
-  # z-scoring
-  mutate(across(
-    c(danc, baby, heal, love),
-    ~ scale(.x),
-    .names = "zm_{.col}"
-  ),
-  # adding distance variable
-  dist = geodist_vec(song_latitude,
-                    song_longitude,
-                    geo_latitude,
-                    geo_longitude, 
-                    paired=T,
-                    measure="haversine")) %>% 
-  mutate(z_dist = scale(dist),
-         log_dist = log1p(dist))
-
-# combined data
-combined_data <- left_join(
-  webdat %>% select(song, songfunction, 
-                    web_danc = mean_danc,
-                    web_heal = mean_heal,
-                    web_baby = mean_baby,
-                    web_love = mean_love), 
-  fielddat %>% select(song, songfunction, 
-                      field_danc = mean_danc,
-                      field_heal = mean_heal,
-                      field_baby = mean_baby,
-                      field_love = mean_love), 
-  by = c("song", "songfunction"))
-
-```
-
-
-```{r}
-# store demographic info about ind. and SS cohorts
-
-info <- list()
-info$web <- map(c("indx", "natlang", "natlang_fam", "natcountry") %>%
-                  set_names(c("n","lang","langfam","country")),
-                ~ n_distinct(webraw[[.x]]))
-info$field$n <- fieldraw$indx %>% n_distinct
-
-```
-
-```{r}
-
-# Function to run linear models and spit out formatted list
-mod_extracter <- function(outcome_var, contrasts, target, data_x) {
-  out <- list()
-  x <- reformulate(c("danc + baby + love + heal - 1"), response = outcome_var)
-  mod <- lm(x, data = data_x)
-  out$mod <- mod %>% glance
-  out$coef <- mod %>% tidy %>% split(.$term)
-  lht <- glht(mod, linfct = contrasts)
-  out$lht <- lht %>%
-    summary(., adjusted("bonferroni")) %>% tidy %>%
-    bind_cols(., lht %>% confint %>% tidy %>% select(conf.low, conf.high)) %>% 
-    mutate(contrast = snakecase::to_snake_case(contrast)) %>% split(.$contrast)
-  x <- reformulate(c(target), response = outcome_var)
-  out$lht$diff <- lm(x, data = data_x) %>% tidy %>%
-    mutate(term = snakecase::to_snake_case(term)) %>% split(.$term)
-  
-  return(out)
-}
-
-mods$danc <- mod_extracter("zm_danc", c("baby - danc = 0", 
-                     "heal - danc = 0",
-                     "love - danc = 0"), 
-                     "danc", webdat)
-mods$baby <- mod_extracter("zm_baby", c("danc - baby = 0",
-                     "heal - baby = 0",
-                     "love - baby = 0"),
-                     "baby", webdat)
-mods$heal <- mod_extracter("zm_heal", c("baby - heal = 0",
-                     "danc - heal = 0",
-                     "love - heal = 0"),
-                     "heal", webdat)
-mods$love <- mod_extracter("zm_love", c("baby - love = 0",
-                     "heal - love = 0",
-                     "danc - love = 0"),
-                     "love", webdat)
-
-```
 
 \raggedright
 \LARGE
-\textbf{Mutual intelligibility in musical communication}
+\textbf{Universal interpretations of vocal music}
 
 \vspace{0.1in}
 
 \justifying
 \normalsize
-Lidya Yurdum^1,2,$\ast$^, Manvir Singh^3^, Luke Glowacki^4^, Tom Vardy^5^, Quentin D. Atkinson^5^, Courtney B. Hilton^2,5^, Disa Sauter^1^, Max M. Krasnow^6^, \& Samuel A. Mehr^2,5,$\ast$^
+Lidya Yurdum^1,2,$\ast$^, Manvir Singh^3^, Luke Glowacki^4^, Thomas Vardy^5^, Quentin D. Atkinson^5^, Courtney B. Hilton^5^, Disa Sauter^2^, Max M. Krasnow^6^, \& Samuel A. Mehr^1,5,$\ast$^
 
 \small
-^1^Department of Psychology, University of Amsterdam, Amsterdam 1018WT, Netherlands.  
-^2^Haskins Laboratories, Yale University, New Haven, CT 06511, USA.  
+^1^Child Study Center, Yale University, New Haven, CT 06520, USA.  
+^2^Department of Psychology, University of Amsterdam, Amsterdam 1018WT, Netherlands.  
 ^3^Institute for Advanced Study in Toulouse, 31080 Toulouse Cedex 6, France.  
 ^4^Department of Anthropology, Boston University, Boston, MA 02215, USA.  
 ^5^School of Psychology, University of Auckland, Auckland 1010, New Zealand.  
 ^6^Division of Continuing Education, Harvard University, Cambridge, MA 02138, USA.  
 
-\*Corresponding authors. E-mail: [lidya.yurdum\@yale.edu](mailto:lidya.yurdum@yale.edu){.email}, [sam\@yale.edu](mailto:sam@yale.edu){.email}
+\*Corresponding authors. E-mail: [lidya.yurdum\@yale.edu](mailto:lidya.yurdum@yale.edu){.email}, [sam\@auckland.ac.nz](mailto:sam@auckland.ac.nz){.email}
 
 \bigskip
 
 ```{=tex}
 \normalsize
 \begin{mdframed}[backgroundcolor=gray!20]
-Despite the variability of music across cultures, some types of human songs share acoustic characteristics with one another. For example, dance songs tend to be loud and rhythmic and lullabies tend to be quiet and melodious. Human perceptual sensitivity to the behavioural contexts of songs on the basis of these acoustic features raises the possibility that basic properties of music are mutually intelligible, independent of linguistic or cultural content. Whether these effects reflect a universal perceptual phenomenon, however, is unclear, because prior studies focus almost exclusively on English-speaking participants, a group that is not representative of humans, writ large. Here we report shared intuitions concerning the behavioural contexts of unfamiliar songs produced in unfamiliar languages, in participants living in Internet-connected industrialised societies ($n = 5,516$ native speakers of 28 languages) or smaller-scale societies with limited access to global media ($n = 116$ native speakers of 3 non-English languages). Participants listened to songs randomly selected from a representative sample of human vocal music, originally used in four behavioural contexts, and rated the degree to which they believed the song was used for each context. Listeners in both industrialised and smaller-scale societies reliably inferred the contexts of dance songs, lullabies, and healing songs, but not love songs. Within and across the cohorts, inferences were mutually consistent. Further, increased linguistic or geographical proximity between listeners and singers only minimally increased the accuracy of the inferences. These results demonstrate that the behavioural contexts of three common forms of music are mutually intelligible across cultures and imply that musical diversity, shaped by cultural evolution, is nonetheless grounded in some universal principles.
+Despite the variability of music across cultures, some types of human songs share acoustic characteristics. For example, dance songs tend to be loud and rhythmic and lullabies tend to be quiet and melodious. Human perceptual sensitivity to the behavioural contexts of songs, on the basis of these musical features, raises the possibility that basic properties of music are mutually intelligible, independent of linguistic or cultural content. Whether these effects reflect universal interpretations of vocal music, however, is unclear, because prior studies focus almost exclusively on English-speaking participants, a group that is not representative of humans writ large. Here we report shared intuitions concerning the behavioural contexts of unfamiliar songs produced in unfamiliar languages, in participants living in Internet-connected industrialised societies ($n = 5,516$ native speakers of 28 languages) or smaller-scale societies with limited access to global media ($n = 116$ native speakers of 3 non-English languages). Participants listened to songs randomly selected from a representative sample of human vocal music, originally used in four behavioural contexts, and rated the degree to which they believed the song was used for each context. Listeners in both industrialised and smaller-scale societies reliably inferred the contexts of dance songs, lullabies, and healing songs, but not love songs. Within and across the cohorts, inferences were mutually consistent. Further, increased linguistic or geographical proximity between listeners and singers only minimally increased the accuracy of the inferences. These results demonstrate that the behavioural contexts of three common forms of music are mutually intelligible across cultures and imply that musical diversity, shaped by cultural evolution, is nonetheless grounded in some universal perceptual phenomena.
 
 \textbf{Keywords:} music, cross-cultural, universality, form, function, cultural evolution
 \end{mdframed}
@@ -305,17 +140,19 @@ Despite the variability of music across cultures, some types of human songs shar
 \linenumbers
 \bigskip
 
-Like many other animals, humans use vocalisations to convey their intentions and affective states [@Morton1977; @Pisanski2022]. Such vocalisations would be meaningless in a world where members of one's own — or other — species could not interpret these signals in a useful way. Indeed, many animal and human vocalisations are not arbitrary but instead display systematic relationships between their acoustic form and their behavioural function [@Endler1993; @Fitch2002; @Pisanski2022]. For instance, the human scream is unlikely to have evolved arbitrarily as a means of communicating distress and urgency: rather, a scream involves extreme high frequencies [@Pisanski2020] and acoustic roughness [@Arnal2015] that set it apart from regular verbal communication, and make it explicitly appropriate for the behavioural function of grabbing attention. 
+Like many other animals, humans use vocalisations to convey their intentions and affective states [@Morton1977; @Pisanski2022]. Such vocalisations would be meaningless in a world where members of one's own — or other — species could not interpret these signals in a useful way. Indeed, many animal and human vocalisations are not arbitrary but instead display systematic relationships between their acoustic form and their behavioural function [@Endler1993; @Fitch2002; @Pisanski2022]. For instance, the human scream is unlikely to have evolved arbitrarily as a means of communicating distress and urgency: rather, a scream involves extreme high frequencies [@Pisanski2020] and acoustic roughness [@Arnal2015] that set it apart from regular verbal communication, and make it appropriate for the behavioural function of grabbing attention. 
 
 Such form-function relationships in human vocalisations allow listeners to infer a range of information about others, such as intention [@Bryant2007], emotion [@Barrett2008; @Laukka2021], and physical prowess [@Raine2019; @Sell2010]. Form-function relationships in vocalisations even appear to be preserved across species: for instance, humans can infer the behavioural context and affect of chimpanzee vocalisations [@Kamiloglu2020], and deer mothers are sensitive to the distress calls of a variety of mammals [@Lingle2014].
 
-Systematic form-function relationships also apply to more complex vocalisations. Song is a human universal characterised by rich variability within and across cultures [@Mehr2019; @Nettl1964; @Lomax1968]. Some of the behavioural contexts in which songs are used, however, are conspicuously similar around the globe, such as singing to soothe fussy infants, or singing to coordinate dancing [@Trehub1993; @Trehub1993a; @Mehr2018a; @Mehr2019; @Hilton2022a; @Hilton2022b; @Singhinpressa]. Songs used for specific functions in specific behavioural contexts tend to display stereotyped acoustic features: for example, dance songs tend to share clearly accented and predictable beat structures. As with other types of vocalisations, form-function patterns in human song may originate from our evolved psychology, perceptual biases, or unique social environment [@Hagen2003; @Hagen2009; @Mehr2021; @Mehr2017]. These constraints on cultural-evolutionary processes result in musical behaviours that show elements of cultural specificity while still remaining grounded in general biological tendencies [@Richerson2008; @Sperber2004]. The resulting regularities enable listeners to reliably infer the behavioural contexts of unfamiliar foreign music [@Mehr2018a; @Mehr2019], even young children, who have less musical experience relative to adults [@Hilton2022b]. 
+Systematic form-function relationships also occur in more complex vocalisations. Vocal music (hereafter, song) is a human universal characterised by rich variability within and across cultures [@Mehr2019; @Nettl1977; @Lomax1968]. Some of the behavioural contexts in which songs are used, however, are conspicuously similar around the globe, such as singing to soothe fussy infants or singing to coordinate dancing [@Trehub1993; @Trehub1993a; @Mehr2018a; @Mehr2019; @Hilton2022a; @Hilton2022b; @Singh2023]. Songs used for specific functions in specific behavioural contexts tend to have objective acoustic correlates; that is, they tend to display stereotyped musical features associated with their specific behavioural context. For example, dance songs tend to share clearly accented and predictable beat structures. 
 
-Notably, while prior experiments demonstrate that people can infer the behavioural contexts of songs from different cultures using their acoustic features, these studies frequently have sampling limitations. For instance, some studies rely primarily on English-speaking Western participants [@Trehub1993], and those that have reached participants around the world still rely on English speakers who have access to the Internet [@Mehr2018a; @Mehr2019; @Hilton2022a]; n.b., this important problem affects many areas of the cognitive sciences [@Blasi2022]. Thus, although the stimuli participants in these studies listened to were cross-culturally representative, it is unclear how much of the accuracy of listener inferences is accounted for by universal form-function links in musical behaviour, and how much is a product of (Western) enculturation, education, and exposure to world music through globalised media.
+As with other types of vocalisations, form-function patterns in human song may originate from our evolved psychology, perceptual biases, or unique social environment [@Hagen2003; @Hagen2009; @Mehr2021; @Mehr2017]. These constraints on cultural-evolutionary processes result in musical behaviours that show elements of cultural specificity while still remaining grounded in general biological tendencies [@Richerson2008; @Sperber2004]. The resulting regularities enable listeners to reliably infer the behavioural contexts of unfamiliar foreign music [@Mehr2018a; @Mehr2019], including young children, who have less musical experience relative to adults [@Hilton2022b]. 
 
-Here, we test the prediction that the behavioural contexts of songs are mutually intelligible to listeners across cultures. We study a large and diverse sample of listeners recruited worldwide in many languages, from both industrialised societies and smaller-scale societies. We use *smaller-scale* to refer to (i) societies in which individuals interact in a "small" world (i.e., 10-100 other individuals but not more), most interactions are face-to-face, and there is a high degree of interdependence); and (ii) societies less affected by states, markets, globalization, and/or world religions. 
+While prior experiments have shown that people can infer the behavioural contexts of songs from different cultures using only acoustic features of the songs, these studies frequently have sampling limitations. For instance, some studies rely primarily on English-speaking Western participants [@Trehub1993], and those that have reached participants around the world still rely on English speakers who have access to the Internet [@Mehr2018a; @Mehr2019; @Hilton2022a] — an important problem affecting many areas of the cognitive sciences [@Blasi2022]. Thus, although the stimuli participants in these studies listened to were cross-culturally representative, it is unclear how much of the accuracy of listener inferences is accounted for by universal form-function links in musical behaviour, and how much is a product of (Western) enculturation, education, and exposure to world music through globalised media.
 
-We predicted that listeners in both industrialised and smaller-scale societies would correctly infer the behavioural contexts of three types of unfamiliar songs (dance, lullaby, healing), reflecting a sensitivity to acoustic cues shared in these contexts across cultures (the preregistration is at [https://osf.io/msvwz](https://osf.io/msvwz)). In exploratory analyses, we asked whether culturally learned cues would give listeners an advantage when inferring the behavioural contexts of songs that are more closely related to their own culture, in line with other domains, such as the perception of emotion in vocalizations [@Laukka2021; @Elfenbein2002].
+Here, we test the prediction that the behavioural contexts of songs are mutually intelligible to listeners across cultures. We study a large and diverse sample of listeners recruited worldwide in many languages, from both industrialised societies and smaller-scale societies. We use *smaller-scale* to refer to (i) societies in which individuals interact in a "small" world (i.e., 10-100 other individuals but not more), most interactions are face-to-face, and there is a high degree of interdependence; and (ii) societies less affected by states, markets, globalization, and/or world religions. 
+
+We predicted that listeners in both industrialised and smaller-scale societies would correctly infer the behavioural contexts of three types of unfamiliar songs (dance, lullaby, healing), reflecting a sensitivity to acoustic and musical cues shared in these contexts across cultures (the preregistration is at [https://osf.io/msvwz](https://osf.io/msvwz)). In exploratory analyses, we asked whether culturally learned cues would give listeners an advantage when inferring the behavioural contexts of songs that are more closely related to their own culture, in line with other domains, such as the perception of emotion in vocalizations [@Laukka2021; @Elfenbein2002].
 
 # Methods {-}
 
@@ -327,13 +164,14 @@ We partnered with Qualtrics Panels to recruit a global sample of participants th
 
 As such, the participants studied included many native speakers of many non-English languages, along with native English speakers from countries where English is the primary official language, such as Australia [we did not recruit in the United States because prior work included many United States participants, @Mehr2019; @Hilton2022b]. The full list of languages and countries represented in the sample (after exclusions; see below) is in Table 1 and the approximate locations of the participants are visualised in Figure 1.
 
-Note that in the cases of countries with multiple official languages, we were not always successful in our goal of only recruiting native speakers of non-English languages, due to recruitment difficulties. As a result, some participants in some countries were split across native language groupings. For example, the South African sample included native speakers of both Zulu and English (contrary to our plan to include only native speakers of Zulu), whereas the Kenyan sample included only native speakers of Swahili (as planned). Further details on deviations from the preregistered recruitment plan are in SI Text 1.1.
+In the cases of countries with multiple official languages, we were not always successful in our goal of only recruiting native speakers of non-English languages, due to recruitment difficulties. As a result, some participants in some countries were split across native language groupings. For example, the South African sample included native speakers of both Zulu and English (contrary to our plan to include only native speakers of Zulu), whereas the Kenyan sample included only native speakers of Swahili (as planned). Further details on deviations from the preregistered recruitment plan are in SI Text 1.1.
 
-We aimed to maximise data quality with eight planned exclusion criteria: we excluded participants who (i) performed poorly on a commonly used headphone detection task [@Woods2017]; (ii) reported difficulties hearing the audio on at least 4 of 24 trials (e.g., because of poor connectivity); (iii) had an IP address that did not geolocate to the same country they reported as their location; (iv) failed a simple attention check; (v) completed the survey more rapidly than would be possible; (vi) reported not wearing headphones; (vii) reported being in a noisy environment; or (viii) reported not being careful in completing the study. After exclusions, the sample included n = `r info$web$n %>% f` native speakers of `r info$web$lang %>% f` languages, located in `r info$web$country %>% f` countries. 
+We aimed to maximise data quality with eight planned exclusion criteria: we excluded participants who (i) performed poorly on a headphone detection task [@Woods2017]; (ii) reported difficulties hearing the audio on at least 4 of 24 trials (e.g., because of poor connectivity); (iii) had an IP address that did not geolocate to the same country they reported as their location; (iv) failed a simple attention check; (v) completed the survey more rapidly than should be possible; (vi) reported not wearing headphones; (vii) reported being in a noisy environment; or (viii) reported not being careful in completing the study. After exclusions, the sample included `r info$web$n %>% f` native speakers of `r info$web$lang %>% f` languages, located in `r info$web$country %>% f` countries. 
 
-Qualtrics Panels compensated each participant directly in the local currency, with rates varying across countries as a function of local payment standards for survey participation. All participants provided informed consent, under a protocol approved by the Harvard University Committee on the Use of Human Subjects (Ethics ID: IRB16-1080).
+Qualtrics Panels compensated each participant directly in the local currency, with rates varying across countries as a function of local payment standards for survey participation. All participants provided informed consent. The study protocol was approved by the Harvard University Committee on the Use of Human Subjects (protocol IRB16-1080).
 
 \renewcommand{\arraystretch}{1.3}
+
 ```{r table1-manual, results='asis'}
 ## temporary table 1 code -- to update to procedural later
 manual_table1 <- read.csv(here("viz","table1.csv"))
@@ -354,7 +192,7 @@ kable(manual_table1,
   row_spec(c(7,9,12,49,50,51,53,55), hline_after = TRUE) %>%
   kable_styling(font_size = 8,
                 full_width = FALSE) %>%
-  footnote(general = "Linguistic and geographic information about the participants in the industrialised societies. Language information refers to the native language of the participant; languages were classified via Glottolog. Geographic information refers to the country of residence of the participant; world subregions were classified via the Human Relations Area Files.",
+  footnote(general = "Linguistic and geographic information about the participants in the web-experiment. The ``Language'' column denotes the native language spoken by the participant (and the language they completed the experiment in); the ``Total n'' column denotes the number of participants recruited for that language; the ``Language Family'' column denotes the language family this particular language is part of, as per the Glottolog system (40). Glottolog is a comprehensive catalogue of the world's languages and their genealogy, and can be accessed at https://glottolog.org. Within each language, participants were recruited from multiple countries, as noted in the ``Country'' column. For the cultural proximity analyses, participants were then grouped into geographic subregions based on their reported location, as per the Human Relations Area Files World Sub-region typology. The ``Country-wise n'' column indicates the number of participants per language in each country.",
            general_title = "Table 1.",
            footnote_as_chunk = TRUE,
            title_format = "bold",
@@ -363,8 +201,8 @@ kable(manual_table1,
   
 ```
 
-```{r supplementary-table-1a, results='asis', eval=FALSE}
-## code for generating table 1 data, not currently in use and for implementing with procedural table 1 later
+```{r supplementary-table-1a, eval=FALSE, include=FALSE, results='asis'}
+## code for generating table 1 data, which we then edited manually to format
 tmp <- webraw %>% 
   select(indx, natlang_name, natlang_fam, natcountry, listener_subregion) %>% 
   distinct() %>% 
@@ -393,44 +231,19 @@ tmp <- webraw %>%
     `Country-wise n`
   ) %>% distinct() %>% 
   arrange(`Language Family`, Language, Subregion, Country) %>% 
-  write.csv(here("viz","table1.csv"))
+  write.csv(here("viz","table1_notFormatted.csv"))
 
-## temporary code here to manually prettify this table -- to update later
-manual_table1 <- read.csv(here("viz","table1.csv"))
-  kable(manual_table1,
-        format = "latex",
-        booktabs = TRUE,
-        escape = FALSE,
-        linesep = "\\addlinespace",
-        longtable = TRUE,
-        align=rep('l', 6))%>%
-  kable_styling(font_size = 7.5,
-                full_width = FALSE) %>%
-  column_spec(1, width = "1in") %>%
-  column_spec(2, width = "1.2in") %>%
-  column_spec(3, width = "0.5in") %>% 
-  kableExtra::collapse_rows(columns = c(1,2,3,4),
-                            longtable_clean_cut= T,
-                            target = 2,
-                            custom_latex_hline=5) %>% 
-  footnote(general = "Linguistic and geographic information about the participants in the web-experiment. The 'Language' column denotes the native language spoken by the participant (and the language they completed the experiment in); the 'Total n' column denotes the number of participants recruited for that language; the 'Language Family' column denotes the language family this particular language is part of, as per the Glottolog system [@Hammarstrom2019]. Glottolog is a comprehensive catalogue of the world's languages and their genealogy, and can be accessed at [glottolog.org](https://glottolog.org/). Within each language, participants were recruited from multiple countries, as noted in the 'Country' column. For the cultural proximity analyses, participants were then grouped into geographic subregions based on their reported location, as per the Human Relations Area Files World Sub-region typology. The country-wise n indicates the number of participants per language x country.",
-           general_title = "Table 1.",
-           footnote_as_chunk = TRUE,
-           title_format = "bold",
-           escape = FALSE,
-           threeparttable = TRUE)
-  
 ```
 
 ### Smaller-scale Societies (*n* = `r info$field$n %>% f`) {-}
 
-We recruited adult participants from the Nyangatom in Ethiopia (*n* = 35), the Mentawai in Indonesia (*n* = 30), and the Tannese Ni-Vanuatu in Vanuatu (*n* = 56), via word-of-mouth sampling. The approximate locations of each of these smaller-scale societies are visualised in Figure 1 and summary information about each is in Table 2. The societies were chosen for their reduced exposure to music from other cultural traditions. At the time of data collection (2017 to 2019), all three societies had somewhat limited access to TV, radio and the Internet and could not be assumed to have had significant exposure to these communication channels.^[At the time of data collection, the three societies had somewhat limited access to TV, radio and the Internet and they varied in their familiarity with these technologies. The Nyangatom communities had little exposure to these technologies when the experiment was conducted, although exposure has since expanded considerably. The Ni-Vanuatu communities were exposed to Christian music in church, as well as reggae and other foreign music through battery powered radios and, over the last five years, increasing access to the Internet via cell phones. Nonetheless, traditional Kastom music is still widely performed in local religious and civil ceremonies and is an important part of Ni-Vanuatu culture and identity. The Mentawai communities studied encountered non-Mentawai music, particularly Indonesian and Bollywood music, through both radios and memory sticks purchased in the port-town, although both cell phone and radio ownership were rare.] In each society, indigenous music continues to be widespread and central to cultural identity.
+We recruited adult participants from the Nyangatom in Ethiopia (*n* = 35), the Mentawai in Indonesia (*n* = 30), and the Tannese Ni-Vanuatu in Vanuatu (*n* = 56), via word-of-mouth sampling. The approximate locations of each of these smaller-scale societies are visualised in Figure 1 and summary information about each is in Table 2. The societies were chosen for their reduced exposure to music from other cultural traditions. At the time of data collection (2017 to 2019), all three societies had somewhat limited access to TV, radio and the Internet and could not be assumed to have had significant exposure to these communication channels.^[The Nyangatom communities had little exposure to TV, radio, and the Internet when the experiment was conducted, although exposure has since expanded considerably. The Ni-Vanuatu communities were exposed to Christian music in church, as well as reggae and other foreign music through battery powered radios and, over the last five years, increasing access to the Internet via cell phones. Nonetheless, traditional Kastom music is still widely performed in local religious and civil ceremonies and is an important part of Ni-Vanuatu culture and identity. The Mentawai communities studied encountered non-Mentawai music, particularly Indonesian and Bollywood music, through both radios and memory sticks purchased in the port-town, although both cell phone and radio ownership were rare.] In each society, indigenous music continues to be widespread and central to cultural identity.
 
-In the cases of 5 participants, an experimenter expressed concern as to whether the participant understood the task; these participants were excluded without the experimenter being aware of the songs heard. As in the industrialised cohort, participants were compensated directly in the local currency, with rates determined by the Principal Investigator at each site and in keeping with norms across other research projects conducted in the area. Ethics approval was granted by the Pennsylvania State University Office for Research Protections (Ethics ID: STUDY00012265) for data collection in Ethiopia; the Institute for Advanced Study in Toulouse (Ethics ID: 2017-09-001) for data collection in Indonesia; and the University of Auckland Human Participants Ethics Committee (Ethics ID: 021538) for data collection in Vanuatu.
+In the cases of 5 participants, an experimenter expressed concern as to whether the participant understood the task; these participants were excluded without the experimenter being aware of the songs heard. As in the industrialised cohort, participants were compensated directly in the local currency, with rates determined by the Principal Investigator at each site and in keeping with norms across other research projects conducted in the area. Ethics approval was granted by the Pennsylvania State University Office for Research Protections (protocol STUDY00012265) for data collection in Ethiopia; the Institute for Advanced Study in Toulouse (protocol 2017-09-001) for data collection in Indonesia; and the University of Auckland Human Participants Ethics Committee (protocol 021538) for data collection in Vanuatu.
 
-```{r fig1, eval=FALSE, fig.cap="\\textbf{Figure 1 | Geographic distribution of participants.} We recruited participants in industrialised societies and in three smaller-scale societies. The grey dots indicate the approximate locations of the participants in industrialised societies, fig.width=6, as measured via IP geolocation. The yellow dots indicate the approximate locations of the three smaller-scale societies (from left to right, the Nyangatom, Mentawai Islanders, and Tannese Ni-Vanuatu).", fig.height=3, include=FALSE}
+```{r fig1, eval=FALSE, fig.cap="\\textbf{Figure 1 | Geographic distribution of participants.} We recruited participants in industrialised societies and in three smaller-scale societies. The black dots indicate the approximate locations of the participants in industrialised societies, fig.width=6, as measured via IP geolocation. The yellow dots indicate the approximate locations of the three smaller-scale societies (from left to right, the Nyangatom, Mentawai Islanders, and Tannese Ni-Vanuatu).", fig.height=3, include=FALSE}
 
-# This script produces a map with approx. locations of participants based on IP addresses. Since IP addresses are hidden for the public version of this manuscript, we're reaading in the figure from a png file.
+# This script produces a map with approx. locations of participants based on IP addresses. Since IP addresses are hidden for the public version of this manuscript, we're reading in the figure from a png file.
 web_data <- webraw %>% 
   group_by(indx) %>% 
   summarise(lat = unique(geo_latitude), long = unique(geo_longitude), .groups = "drop") %>% 
@@ -474,13 +287,13 @@ knitr::include_graphics(here("viz", "fig1.png"))
 
 # Table 2
 read_csv(here("viz", "small-soc_table.csv")) %>%
-  select(1:8) %>% 
+  select(1:7) %>% 
   janitor::clean_names() %>% 
   mutate(size = ifelse(society == "Nyangatom", 34, ifelse(society=="Mentawai Islanders", 27, 55))) %>% 
   kable(.,
         format = "latex",
         booktabs = TRUE,
-        col.names = c("Region","Sub-Region","Society","Language","Language family","Subsistence type","Approx. Community Size","Distance to city (km)", "Final $n$"),
+        col.names = c("Region","Society","Language","Language family","Subsistence type","Approx. Community Size","Distance to city (km)", "Final $n$"),
         escape = FALSE,
         linesep = "\\addlinespace",
         longtable = TRUE,
@@ -493,49 +306,41 @@ read_csv(here("viz", "small-soc_table.csv")) %>%
            title_format = "bold",
            escape = FALSE,
            threeparttable = TRUE) %>%
-  column_spec(1, width = "1cm") %>%
-  column_spec(2, width = "1.2cm") %>%
+  column_spec(1, width = "1.2cm") %>%
+  column_spec(2, width = "1.7cm") %>%
   column_spec(3, width = "1.7cm") %>%
-  column_spec(4, width = "1.7cm") %>%
-  column_spec(5, width = "2cm") %>%
+  column_spec(4, width = "2cm") %>%
+  column_spec(5, width = "1.8cm") %>%
   column_spec(6, width = "1.8cm") %>%
-  column_spec(7, width = "1.2cm") %>%
-  column_spec(8, width = "1.2cm") %>% 
-  column_spec(9, width = "0.5cm")
+  column_spec(7, width = "1.5cm") %>% 
+  column_spec(8, width = "1cm")
 
 ```
 
-```{r number of ratings per song, include=FALSE}
-
-counts_per_song_web <- webraw %>% 
-  group_by(song) %>% 
-  mutate(n_persong = n()) %>% 
-  select(song, n_persong) %>% distinct()
-
-counts_per_song_field <- fieldraw %>% 
-  group_by(song) %>% 
-  mutate(n_persong = n()) %>% 
-  select(song, n_persong) %>% distinct()
-
-```
 
 ## Materials {-}
 
-The stimuli were excerpts of each of the 118 songs in the *Natural History of Song Discography* [@Mehr2019], originally recorded in 86 mostly smaller-scale societies spanning 30 world regions [@Murdock2008; @Naroll1967], over 75 languages, and a range of subsistence methods. The songs were originally used in four behavioural contexts: soothing a baby, dancing, expressing love and healing the sick. The contexts of the songs were determined on the basis of ethnographic descriptions alone [see @Mehr2019 for full methods]. 
+All data, protocols, code, and materials are publicly available at https://github.com/themusiclab/universal-music (see End Notes for details).
 
-The excerpts were randomly selected 14-second segments of each song that contained singing (i.e., not instrumental-only sections), used in prior work [@Mehr2018a]. Readers can explore the *Discography* graphically at https://themusiclab.org/nhsplots or download the excerpts from https://doi.org/10.5281/zenodo.7265514.
+The stimuli were excerpts of each of the 118 songs in the *Natural History of Song Discography* [@Mehr2019], originally recorded in 86 mostly smaller-scale societies spanning 30 world regions [@Murdock2008; @Naroll1967], over 75 languages, and a range of subsistence methods. The songs were originally used in four behavioural contexts: soothing a baby, dancing, expressing love, and healing the sick.
+
+Three characteristics of the *Discography* help to minimise bias in categorising the behavioural context of each song: (i) predetermined definitions of songs were used for categorisation decisions [see Table S21 in ref. @Mehr2019]; (ii) in most cases (101 of 118 songs) behavioural contexts were determined by a consensus evaluation of substantive information found in searches of candidate recordings' liner notes and supporting ethnographic texts; and (iii) the songs were categorised by researchers who had not yet listened to the songs, ensuring that their opinions concerning the sounds present on a given recording could not influence categorisation decisions.
+
+The excerpts were randomly selected 14-second segments of each song that contained singing (i.e., not instrumental-only sections), used in prior work [@Mehr2018a]. Readers can listen to all 118 song samples in the *Discography* and visually explore their acoustic and musical features at [https://www.themusiclab.org/vocal-interpretations](https://www.themusiclab.org/vocal-interpretations). The excerpts can be downloaded from https://doi.org/10.5281/zenodo.7265514.
 
 ## Procedure {-}
 
-For each trial of the listening task, participants first listened to the full 14-second song excerpt. Afterward, they were prompted with the text "Think of the people making this music. I think that they...", to which they could respond on a scale from 1 ("Definitely do not use the music...[context]") to 4 ("Definitely use the music...[context]"), where [context] referred to each of the four behavioural contexts represented in the corpus, i.e., "for dancing", "to soothe a baby", "to heal illness" and "to express love for another person". Two additional contexts that were not represented in the corpus were also included, as distractors ("to greet visitors" and "to praise a person’s achievements"). The text was always presented in the participant's native language (see Translations, below).
+For each trial of the listening task, participants first heard a 14-second song excerpt. Afterward, they were prompted with the text "Think of the people making this music. I think that they...", to which they could respond on a scale from 1 ("Definitely do not use the music...[context]") to 4 ("Definitely use the music...[context]"), where [context] referred to each of the four behavioural contexts represented in the corpus, i.e., "for dancing", "to soothe a baby", "to heal illness" and "to express love for another person". The text was always presented in the participant's native language (see Translations, below).
+
+We note that this procedure contrasts with that of our previous work in refs. @Mehr2019 and @Hilton2022b, which include citizen-science listener experiments using forced-choice paradigms, and aligns with other studies from our lab using ordinal ratings of perceived behavioural contexts [@Mehr2018a]. Forced-choice paradigms have been criticised for biasing participants' responses towards the available options, resulting in false positives [@Betz2019; @Frank2001]. Here, we opted against a forced-choice paradigm to avoid leading listeners to artificially categorise songs into one and only one behavioural context, as songs can obviously be used for multiple, overlapping behavioural contexts in many societies. Using rating scales instead enabled us to identify one or more behavioural contexts that participants found appropriate for each song, along with those that they found inappropriate. We also asked participants to rate each song on two additional context dimensions, that were not represented by any songs in the corpus, as distractors ("to greet visitors" and "to praise a person's achievements"). 
 
 Each participant heard a set of excerpts drawn from the corpus randomly and without replacement. In the industrialised cohort, participants heard 24 excerpts; in the smaller-scale societies, the experiment was shorter, with only 18 excerpts.
 
 In the industrialised societies, participants completed the listening task via a Qualtrics survey displayed in their native language. It also included questions on the participants' gender, age, country, native language, the amount of time they spent per day on the Internet or listening to music, their perception of their own musical skills, and their familiarity with traditional music from around the world. The survey could be completed on a desktop computer or mobile device, but required participants to wear headphones (see Participants). Responses were collected by keypresses, screen taps, and/or mouse clicks.
 
-In the smaller-scale societies, participants sat with an experimenter, who read instructions aloud in the participant's native language (Nyangatom, Mentawai, or Bislama) and recorded their responses on a laptop (see Figure S1). During the listening task, participants listened to the song excerpts on headphones (ensuring the experimenter was unaware of which stimuli were heard) and entered their responses by pressing one of three large buttons on a custom button box. The buttons were labelled with a sequence of circles in ascending size, to help participants remember the direction of the scale. Participants were first familiarised with the box, identifying the three buttons corresponding to the possible responses. At the end of the experiment, participants were asked to re-identify each button to confirm that they remembered the response labels. The experiment was controlled via E-Prime 2.0.10.356 (Psychology Software Tools, Inc.). The participants sat opposite the experimenter and could not view the laptop screen. Participants reported their gender before the listening task, but no further data were collected.
+In the smaller-scale societies, participants sat with an experimenter, who read instructions aloud in the participant's native language (Nyangatom, Mentawai, or Bislama) and recorded their responses on a ruggedized laptop (see Figure S1). During the listening task, participants listened to the song excerpts on headphones (ensuring the experimenter was unaware of which stimuli were heard) and entered their responses by pressing one of three large buttons on a custom button box. The buttons were labelled with a sequence of circles in ascending size, to help participants remember the direction of the scale. Participants were first familiarised with the box, identifying the three buttons corresponding to the possible responses. At the end of the experiment, participants were asked to re-identify each button to confirm that they remembered the response labels. The experiment was controlled via E-Prime 2.0.10.356 (Psychology Software Tools, Inc.). The participants sat opposite the experimenter and could not view the laptop screen. Participants reported their gender before the listening task but no further data were collected.
 
-On the basis of piloting in the field, we simplified the task used in the smaller-scale societies by reducing the number of response options from 4 points to 3 points, and rephrased the prompt as a question (i.e., "Do you think they use the music for [context]?" with response options "no", "a little", and "yes"; see Translations). We also opted to include two additional distractor contexts, for a total of eight contexts per song (the six reported above along with the two distractors from [@Mehr2018a]: "to mourn the dead" and "to tell a story").
+On the basis of piloting in the field (by M.S. and L.G.), we simplified the task used in the smaller-scale societies by reducing the number of response options in each behavioural context dimension from 4 points to 3 points, and rephrased the prompt as a question (i.e., "Do you think they use the music for [context]?" with response options "no", "a little", and "yes"; see Translations). We also opted to include two additional distractor contexts, for a total of eight contexts per song (the six reported above along with the two distractors from ref. [@Mehr2018a]: "to mourn the dead" and "to tell a story").
 
 ### Translations {-}
 
@@ -548,7 +353,7 @@ The translation procedures were similar for the smaller-scale societies, but our
 
 For both cohorts, we calculated song-wise mean scores across all participants on each behavioural context dimension. These scores reflected, on average, how likely the participants thought it was that each song was used in each of the six behavioural contexts. These song-wise averages were then *z*-scored. 
 
-Because each participant only heard a randomly selected subset of the corpus, the number of ratings averaged for each song in each cohort varied (industrialised societies: median = `r median(counts_per_song_web$n_persong)` ratings, range = `r min(counts_per_song_web$n_persong)`-`r max(counts_per_song_web$n_persong)` times; smaller-scale societies: median = `r median(counts_per_song_field$n_persong)`, range = `r min(counts_per_song_field$n_persong)`-`r max(counts_per_song_field$n_persong)`).
+Because each participant only heard a randomly selected subset of the corpus, the number of ratings averaged for each song in each cohort varied (industrialised societies: median = `r round(median(counts_per_song_web$n_persong),0)` ratings, range `r min(counts_per_song_web$n_persong)`-`r max(counts_per_song_web$n_persong)`; smaller-scale societies: median = `r median(counts_per_song_field$n_persong)`, range `r min(counts_per_song_field$n_persong)`-`r max(counts_per_song_field$n_persong)`).
 
 ```{r accuracy plots, eval=FALSE, warning=FALSE, include=FALSE}
 # accuracy plots for ind. and s.s. cohorts
@@ -579,7 +384,7 @@ acc_plotter <- function(y_axis, title) {
     theme_classic() +
     theme(
       plot.margin = unit(c(0,0,0,0), "cm"),
-      text = element_text(size=9, family = "serif"),
+      text = element_text(size=9),
       axis.text.x = element_text(size = 8),
       plot.title = element_text(size = 11),
       legend.position = "none"
@@ -598,60 +403,86 @@ dancplot + babyplot + healplot + loveplot +
 
 ```
 
-```{r bootstrap_tests}
+```{r eval=FALSE, include=FALSE}
 
-# test hypothesis that tru correlation > 0 for each song type,
-# see analysis/bootstrap_analyses.R for details
-boots <- read_csv(here("results","bootstrap_res2.csv")) %>% 
-  map(~ t.test(.x, mu = 0, alternative = "greater") %>% tidy) 
+# This chunk defines the function used to bootstrap random pairs of countries, correlated their responses on a given scale, and store the coefficient (in `cors`). 
+# To save time while knitting this document, this chunk will not be executed. Instead, results of the bootstrapping procedure are read in from results/bootstrap_res2.csv. 
+
+set.seed(1)
+
+webraw <- filter(fulldata, study == "web")
+
+# randomly select two industrialised cohorts, compute their song-wise mean ratings, and store their correlation. 
+
+boot2 <- function(type, n = 500000) {
+  cors <- c()
+
+  for (i in 1:n) {
+    cohorts <- sample(unique(webraw$cohort),2)
+    
+    c1 <- fulldata[fulldata$cohort==cohorts[1],]
+    c2 <- fulldata[fulldata$cohort==cohorts[2],]
+    
+    c1 <- c1 %>% 
+      group_by(song, songfunction) %>% 
+      summarize(mean_danc = mean(danc, na.rm = T),
+                mean_heal = mean(heal, na.rm = T),
+                mean_baby = mean(baby, na.rm = T),
+                mean_love = mean(love, na.rm = T)) 
+    c2 <- c2 %>% 
+      group_by(song, songfunction) %>% 
+      summarize(mean_danc = mean(danc, na.rm = T),
+                mean_heal = mean(heal, na.rm = T),
+                mean_baby = mean(baby, na.rm = T),
+                mean_love = mean(love, na.rm = T)) 
+    
+    if (type == "danc") {
+      cors[i] <- cor.test(c1$mean_danc, c2$mean_danc)$estimate
+    } else if (type =="baby") {
+      cors[i] <- cor.test(c1$mean_baby, c2$mean_baby)$estimate
+    } else if (type =="heal") {
+      cors[i] <- cor.test(c1$mean_heal, c2$mean_heal)$estimate
+    }else if (type =="love") {
+      cors[i] <- cor.test(c1$mean_love, c2$mean_love)$estimate
+    } else {
+      warning("Incorrect input.")
+    }
+  }
+  
+  return(cors)
+}
+
+danccors <- suppressMessages(boot2("danc"))
+babycors <- suppressMessages(boot2("baby"))
+healcors <- suppressMessages(boot2("heal"))
+lovecors <- suppressMessages(boot2("love"))
+
+within_cors <- cbind(danccors, babycors, healcors, lovecors)
+write.csv(within_cors,here("results", "bootstrap_res2.csv"), row.names = FALSE)
 
 ```
 
-```{r field_mods}
-# run linear models for SS cohort and store results
-
-field <- list()
-
-field$danc <- mod_extracter("zm_danc", c("baby - danc = 0", 
-                     "heal - danc = 0",
-                     "love - danc = 0"), 
-                     "danc", fielddat)
-field$baby <- mod_extracter("zm_baby", c("danc - baby = 0",
-                     "heal - baby = 0",
-                     "love - baby = 0"),
-                     "baby", fielddat)
-field$heal <- mod_extracter("zm_heal", c("baby - heal = 0",
-                     "danc - heal = 0",
-                     "love - heal = 0"),
-                     "heal", fielddat)
-field$love <- mod_extracter("zm_love", c("baby - love = 0",
-                     "heal - love = 0",
-                     "danc - love = 0"),
-                     "love", fielddat)
-
-```
 
 ## Three forms of song are mutually intelligible {-}
 
-First, we asked whether listeners could accurately infer the behavioural contexts of the songs, using the same analysis strategy as [@Mehr2018a], which included similar data types: we tested whether each behavioural context (e.g., all the dance songs) was rated higher than the average rating across all songs, on its corresponding dimension (e.g., "...for dancing"), with multiple regressions with an intercept fixed at zero, where the *z*-transformed mean ratings for each song in each context were regressed onto binary variables denoting the actual behavioural contexts. This approach measures whether songs originally used in a given behavioural context were perceived to be *more* appropriate for that context than the average song in the corpus.^[For an alternative analysis approach using mixed models in the industrialised societies, see SI Text 1.2.]
+First, we asked whether listeners could accurately infer the behavioural contexts of the songs, using the same analysis strategy as in ref. @Mehr2018a, which included similar data types: we tested whether each behavioural context (e.g., all the dance songs) was rated higher than the average rating across all songs, on its corresponding dimension (e.g., "...for dancing"), with multiple regressions with an intercept fixed at zero, where the *z*-transformed mean ratings for each song in each context were regressed onto binary variables denoting the actual behavioural contexts. This approach measures whether songs originally used in a given behavioural context were perceived to be *more* appropriate for that context than the average song in the corpus. For an alternative analysis approach using mixed models in the industrialised societies, see SI Text 1.2.
 
 Listeners from both the industrialised and smaller-scale societies discriminated three of the four behavioural contexts reliably above chance (Figure 2). This confirms the primary preregistered prediction and replicates prior findings in a much narrower sample [i.e., English-speaking Amazon Mechanical Turk participants\; @Mehr2018a].
 
-Response patterns across behavioural contexts were informative in both positive and negative directions. For example, the industrialised cohort rated dance songs `r mods$danc$coef$danc$estimate %>% r2` standard-deviations above the base rate of "...for dancing" responses ($\beta_{danc}$ = `r mods$danc$coef$danc$estimate %>% r2`, *SE* = `r mods$danc$coef$danc$std.error %>% r3`, $p$ `r mods$danc$coef$danc$p.value %>% fp`), but rated lullabies `r mods$danc$coef$baby$estimate %>% abs %>%  r2` standard-deviations *below* the base rate ($\beta_{baby}$ = `r mods$danc$coef$baby$estimate %>% r2`, *SE* = `r mods$danc$coef$baby$std.error %>% r3`, $p$ `r mods$danc$coef$baby$p.value %>% fp`). This suggests listeners inferred that completely unfamiliar dance songs were suitable for dancing, *but also that lullabies were not*. The reverse pattern was evident for "...to soothe a baby" responses, with lullabies rated `r mods$baby$coef$baby$estimate %>% r2` standard deviations above the base rate ($\beta_{baby}$ = `r mods$baby$coef$baby$estimate %>% r2`, *SE* = `r mods$baby$coef$baby$std.error %>% r3`, $p$ `r mods$baby$coef$baby$p.value %>% fp`) and dance songs well below the base rate ($\beta_{danc}$ = `r mods$baby$coef$danc$estimate %>% r2`, *SE* = `r mods$baby$coef$danc$std.error %>% r3`, $p$ `r mods$baby$coef$danc$p.value %>% fp`).
+Response patterns across behavioural contexts were informative in both positive and negative directions. For example, the industrialised cohort rated dance songs `r mods$danc$coef$danc$estimate %>% r2` standard deviations above the base rate on the "...for dancing" dimension ($\beta$ = `r mods$danc$coef$danc$estimate %>% r2`, *SE* = `r mods$danc$coef$danc$std.error %>% r3`, $p$ `r mods$danc$coef$danc$p.value %>% fp`), but rated lullabies `r mods$danc$coef$baby$estimate %>% abs %>%  r2` standard deviations *below* the base rate ($\beta$ = `r mods$danc$coef$baby$estimate %>% r2`, *SE* = `r mods$danc$coef$baby$std.error %>% r3`, $p$ `r mods$danc$coef$baby$p.value %>% fp`). This suggests listeners inferred that completely unfamiliar dance songs were suitable for dancing, but also that lullabies were not. The reverse pattern was evident for the "...to soothe a baby" dimension, with lullabies rated `r mods$baby$coef$baby$estimate %>% r2` standard deviations above the base rate ($\beta$ = `r mods$baby$coef$baby$estimate %>% r2`, *SE* = `r mods$baby$coef$baby$std.error %>% r3`, $p$ `r mods$baby$coef$baby$p.value %>% fp`) and dance songs well below the base rate ($\beta$ = `r mods$baby$coef$danc$estimate %>% r2`, *SE* = `r mods$baby$coef$danc$std.error %>% r3`, $p$ `r mods$baby$coef$danc$p.value %>% fp`).
 
-Despite the smaller sample sizes and minor differences in the method, similar patterns were evident in data from the smaller-scale societies. Dance songs were rated above the base rate of "...for dancing" ($\beta_{dance}$ = `r field$danc$coef$danc$estimate %>% r2`, *SE* = `r field$danc$coef$danc$std.error %>% r3`, $p$ `r field$danc$coef$danc$p.value %>% fp`), with lullabies below it ($\beta_{baby}$ = `r field$danc$coef$baby$estimate %>% r2`, *SE* = `r field$danc$coef$baby$std.error %>% r3`, $p$ `r field$danc$coef$baby$p.value %>% fp`); and lullabies were rated `r field$baby$coef$baby$estimate %>% r2` standard-deviations above the base rate of "...to soothe a baby" ($\beta_{baby}$ = `r field$baby$coef$baby$estimate %>% r2`, *SE* = `r field$baby$coef$baby$std.error %>% r3`, $p$ `r field$baby$coef$baby$p.value %>% fp`).
+Despite the smaller sample sizes and minor differences in the method, similar patterns were evident in data from the smaller-scale societies. Dance songs were rated above the base rate of "...for dancing" ($\beta$ = `r field$danc$coef$danc$estimate %>% r2`, *SE* = `r field$danc$coef$danc$std.error %>% r3`, $p$ `r field$danc$coef$danc$p.value %>% fp`), with lullabies below it ($\beta$ = `r field$danc$coef$baby$estimate %>% r2`, *SE* = `r field$danc$coef$baby$std.error %>% r3`, $p$ `r field$danc$coef$baby$p.value %>% fp`); and lullabies were rated `r field$baby$coef$baby$estimate %>% r2` standard deviations above the base rate of "...to soothe a baby" ($\beta$ = `r field$baby$coef$baby$estimate %>% r2`, *SE* = `r field$baby$coef$baby$std.error %>% r3`, $p$ `r field$baby$coef$baby$p.value %>% fp`). Moreover, both cohorts rated dance songs higher on the “…for dancing” dimension than each of the other three dimensions, and likewise rated lullabies higher on the "...to soothe a baby" dimension than the other three dimensions (all *p*s < .05).
 
-In both cohorts, effects in healing songs were smaller, but still indicated reliable inferences, with ratings on "...to heal illness" above the base rate in both industrialised societies ($\beta_{heal}$ = `r mods$heal$coef$heal$estimate %>% r2`, $SD$ = `r mods$heal$coef$heal$std.error %>% r2`, $p$ `r mods$heal$coef$heal$p.value %>% fp`) and smaller-scale societies ($\beta_{heal}$ = `r field$heal$coef$heal$estimate %>% r2`, $SD$ = `r field$heal$coef$heal$std.error %>% r2`, $p$ `r field$heal$coef$heal$p.value %>% fp`). Consistent with [@Mehr2018a], neither of the cohorts' ratings of love songs on "...to express love for another person" were higher than the base rate, suggesting an inability to accurately identify this behavioural context.^[In a forced-choice version of this task, English-speaking citizen-science participants *did* reliably identify love songs [@Mehr2019], albeit with a small effect size. Love songs are apparently a rather ambiguous category, worldwide.] (Industrialised societies: $\beta_{love}$ = `r mods$love$coef$love$estimate %>% r2`, $SD$ = `r mods$love$coef$love$std.error %>% r2`, $p$ `r mods$love$coef$love$p.value %>% fp`; Smaller-scale societies: $\beta_{love}$ = `r field$love$coef$love$estimate %>% r2`, $SD$ = `r field$love$coef$love$std.error %>% r2`, $p$ `r field$love$coef$love$p.value %>% fp`).
+Effects in healing songs were smaller in both cohorts, but still indicated reliable inferences, with ratings on "...to heal illness" above the base rate in both industrialised societies ($\beta$ = `r mods$heal$coef$heal$estimate %>% r2`, $SD$ = `r mods$heal$coef$heal$std.error %>% r2`, $p$ `r mods$heal$coef$heal$p.value %>% fp`) and smaller-scale societies ($\beta$ = `r field$heal$coef$heal$estimate %>% r2`, $SD$ = `r field$heal$coef$heal$std.error %>% r2`, $p$ `r field$heal$coef$heal$p.value %>% fp`). Healing songs scored higher on the "...to heal illness" dimension than the "...for dancing" dimension in both cohorts, and also higher than the "...to soothe a baby" dimension in the smaller-scale cohort (all *p*s < .05). Consistent with ref. @Mehr2018a, neither of the cohorts' ratings of love songs on "...to express love for another person" were higher than the base rate, suggesting an inability to accurately identify this behavioural context.^[In a forced-choice version of this task, English-speaking citizen-science participants *did* reliably identify love songs [@Mehr2019], albeit with a small effect size.] (Industrialised societies: $\beta$ = `r mods$love$coef$love$estimate %>% r2`, $SD$ = `r mods$love$coef$love$std.error %>% r2`, $p$ `r mods$love$coef$love$p.value %>% fp`; Smaller-scale societies: $\beta$ = `r field$love$coef$love$estimate %>% r2`, $SD$ = `r field$love$coef$love$std.error %>% r2`, $p$ `r field$love$coef$love$p.value %>% fp`). The industrialised cohort did, however, rank love songs higher on the "...to express love for another person" dimension than "...to heal illness" (*p* `r fp(mods$love$lht$heal_love$adj.p.value)`).
 
-In sum, these findings indicate that the behavioural contexts of dance songs, lullabies and healing songs recorded worldwide are intelligible to listeners in both industrialised and smaller-scale societies.
+On an anonymous reviewer's suggestion, we also tested whether the four behavioural context dimensions that we asked listeners to rate the songs on have distinct latent underpinnings, or if they could be summarised into a smaller number of factors. We conducted a principal components analysis on listeners' ratings, separately for the industrialised and smaller-scale society cohorts. In both cohorts, dance songs and lullabies were clearly differentiated by the first component, which loaded positively on the "...for dancing" dimension and negatively on the "...to soothe a baby" dimension, suggesting that the "dancing" and "soothing a baby" dimensions were both tapping into a latent behavioural context that might be described as "high vs. low arousal contexts". This first component explained the majority of variance in responses in both cohorts. Indeed, dance songs and lullabies emerge as the most clearly differentiated pairing in all studies of the *Natural History of Song Discography*, distinguished by musical features such as melodic complexity, rhythmic complexity, tempo, arousal, and accent structure [@Mehr2018a; @Mehr2019; @Hilton2022b]. Full statistical reporting of the principal components analysis is in SI Text 1.3 and results are visualised in Figure S2.
 
-```{r fig2 png, echo = FALSE, out.width='100%', fig.cap="\\textbf{Figure 2 | The behavioural contexts of songs found worldwide are detectable by listeners recruited worldwide.} Listeners heard a random selection of songs originally produced in one of four behavioural contexts: songs that were used \"for dancing\", \"to heal illness\", \"to express love for another person\", or \"to soothe a baby\". For each song, they were unaware of the culture or the behavioural context in which it was recorded. Each of the four plots visualises the distributions of mean song-wise ratings for a particular behavioural context dimension (e.g., \"...for dancing\"). The paired half-violins in each plot correspond to the four behavioural contexts, i.e., the actual behavioural contexts in which the songs originally appeared, denoted by colour. Each of the half-violins corresponds to the mean song-wise ratings from each of the two types of participants (i.e., from industrialised societies or smaller-scale societies). All ratings were $z$-scored, with a score of 0 indicating the average rating on a given dimension, across all songs, regardless of the songs' original behavioural context. For dance songs, lullabies, and healing songs, the ratings of listeners in both types of societies accurately reflected the original behavioural context of the songs (e.g., dance songs, but not the other three behavioural contexts, were rated significantly above average on the dimension \"...for dancing\"), indicated by the stars on either side of a violin, which compare the $z$-scored rating to the value 0. The horizontal lines beetween violin plots denote significant differences in ratings between behavioural contexts, and are split by cohort type, indicated by \"Ind.\" (industrialised) or \"S.S.\" (smaller-scale). For example, participants in the industrialised cohort (Ind.) rated healing songs as significantly lower on the \"used to express love for another person\" dimension, relative to love songs; whereas participants in the smaller-scale society cohort (S.S.) did not rate the two differently. The shaded area in the half-violins represent kernel density estimates; the vertical boxplots denote the median (horizontal line), 95\\% confidence interval (notches), and interquartile range (edges of the boxes), all computed cohort- and song-wise within each plot. $^{\\ast}p < 0.05$, $^{\\ast\\ast}p < 0.01$, $^{\\ast\\ast\\ast}p < 0.001$."}
+In sum, these findings indicate that the behavioural contexts of dance songs, lullabies and healing songs recorded worldwide are intelligible to listeners in both industrialised and smaller-scale societies. 
 
-knitr::include_graphics(here("viz", "accuracy_figure.png"))
-```
 
-```{r fig2, include = FALSE}
-# the above plot (fig2 png) is identical to the plot generated in this chunk, but significance stars and comparison lines were added manually outside of markdown.
+
+```{r fig2, echo=FALSE, fig.cap="\\textbf{Figure 2 | The behavioural contexts of songs found worldwide are detectable by listeners recruited worldwide.} Listeners heard a random selection of songs originally produced in one of four behavioural contexts: songs that were used \"for dancing\", \"to heal illness\", \"to express love for another person\", or \"to soothe a baby\". For each song, they were unaware of the culture or the behavioural context in which it was recorded. Each of the four plots visualises the distributions of mean song-wise ratings for a particular behavioural context dimension (e.g., \"for dancing\"). The paired half-violins in each plot correspond to the four behavioural contexts, i.e., the actual behavioural contexts in which the songs originally appeared, denoted by colour. The half-violins depict the distributions of mean song-wise ratings from each of the two cohorts of participants (i.e., from industrialised societies on the left, or smaller-scale societies on the right). All ratings were $z$-scored, with a score of 0 indicating the average rating on a given dimension, across all songs, regardless of the songs' original behavioural context. For dance songs, lullabies, and healing songs, the ratings of listeners in both types of societies accurately reflected the original behavioural context of the songs (e.g., dance songs, but not the other three behavioural contexts, were rated significantly above average on the dimension \"for dancing\"), indicated by the stars on either side of a violin, which compare the $z$-scored rating to the value 0. The shaded area in the half-violins represent kernel density estimates; the vertical boxplots denote the median (horizontal line), 95\\% confidence interval (notches), and interquartile range (edges of the boxes), all computed cohort- and song-wise within each plot. $^{\\ast}p < 0.05$, $^{\\ast\\ast}p < 0.01$, $^{\\ast\\ast\\ast}p < 0.001$."}
+
 
 combined_plot_data <- webdat %>% 
   mutate(dataset = "web") %>% 
@@ -677,14 +508,14 @@ split_violin_plotter <- function(title, y_axis, axis_label = FALSE) {
     geom_hline(yintercept = 0, linetype = "dotted", size = .5) +
     scale_fill_manual(values = color_scheme) +
     scale_alpha_manual(values = c(1, .6)) +
-    scale_y_continuous(limits = c(-3,4)) +
+    scale_y_continuous(limits = c(-4.5,4.5)) +
     guides(alpha = "none") +
     theme_classic() +
     theme(
       plot.margin = unit(c(0,0,0,0), "cm"),
-      text = element_text(size=10, family = "serif"),
+      text = element_text(size=10),
       axis.text.x = element_blank(),
-      plot.title = element_markdown(size = 12),
+      plot.title = element_text(size = 11, face = "italic"),
       # legend.position = "none",
       legend.title = element_blank(),
       axis.line.x = element_blank(),
@@ -703,10 +534,44 @@ split_violin_plotter <- function(title, y_axis, axis_label = FALSE) {
   return(p)
 }
 
-web_dancplot <- split_violin_plotter("<i style='color: black;'>\"...for dancing\"</i>", zm_danc, TRUE) #6f9acc
-web_babyplot <- split_violin_plotter("<i style='color: black;'>\"...to soothe a baby\"</i>", zm_baby) #44bb74
-web_healplot <- split_violin_plotter("<i style='color: black;'>\"...to heal illness\"</i>", zm_heal) #f27553
-web_loveplot <- split_violin_plotter("<i style='color: black;'>\"...to express love for another person\"</i>", zm_love, TRUE) #fccc54
+# create plots with manual annotations
+web_dancplot <- split_violin_plotter("''...for dancing''", zm_danc, TRUE) + #6f9acc
+  # annotate("segment", x = 1, xend = 4, y = 4, yend = 4) +
+  # annotate("segment", x = 1, xend = 3, y = 4.2, yend = 4.2) +
+  # annotate("segment", x = 1, xend = 2, y = 4.4, yend = 4.4) +
+  # annotate("segment", x = 1, xend = 2, y = -3.8, yend = -3.8, color = "grey64") +
+  # annotate("segment", x = 1, xend = 3, y = -3.6, yend = -3.6, color = "grey64") +
+  # annotate("segment", x = 1, xend = 4, y = -3.4, yend = -3.4, color = "grey64") +
+  annotate("text", x = .8, y = 3, label = "***",size = 3) +
+  annotate("text", x = 1.2, y = 2.5, label = "***",size = 3) +
+  annotate("text", x = 3.8, y = -2, label = "***", size = 3) +
+  annotate("text", x = 4.2, y = -2.5, label = "***",size = 3)
+
+
+web_babyplot <- split_violin_plotter("''...to soothe a baby''", zm_baby)+ #44bb74
+  # annotate("segment", x = 1, xend = 4, y = 4, yend = 4) +
+  # annotate("segment", x = 2, xend = 4, y = 4.2, yend = 4.2) +
+  # annotate("segment", x = 3, xend = 4, y = 4.4, yend = 4.4) +
+  # annotate("segment", x = 3, xend = 4, y = -4.2, yend = -4.2, color = "grey64") +
+  # annotate("segment", x = 2, xend = 4, y = -4, yend = -4, color = "grey64") +
+  # annotate("segment", x = 1, xend = 4, y = -3.8, yend = -3.8, color = "grey64") +
+  annotate("text", x = .8, y = -2.5, label = "***",size = 3) +
+  annotate("text", x = 1.8, y = -2.5, label = "*",size = 3) +
+  annotate("text", x = 2.2, y = -3, label = "**",size = 3) +
+  annotate("text", x = 3.8, y = 3.5, label = "***",size = 3) +
+  annotate("text", x = 4.2, y = 3, label = "***",size = 3) 
+
+web_healplot <- split_violin_plotter("''...to heal illness''", zm_heal) +#f27553
+  # annotate("segment", x = 1, xend = 2, y = 4.4, yend = 4.4) +
+  # annotate("segment", x = 1, xend = 2, y = -4, yend = -4, color = "grey64") +
+  # annotate("segment", x = 2, xend = 4, y = -4.2, yend = -4.2, color = "grey64") +
+  annotate("text", x = .8, y = -3, label = "***",size = 3) +
+  annotate("text", x = 1.8, y = 3, label = "**",size = 3) +
+  annotate("text", x = 2.2, y = 2.5, label = "**",size = 3) 
+
+web_loveplot <- split_violin_plotter("''...to express love for another person''", zm_love, TRUE) + #fccc54
+  # annotate("segment", x = 2, xend = 2.95, y = 4.4, yend = 4.4) +
+  annotate("text", x = 1.8, y = -3, label = "*",size = 3) 
 
 web_dancplot + web_healplot + web_loveplot + web_babyplot +
   plot_layout(ncol = 2, heights = 1, guides = "collect") &
@@ -716,76 +581,26 @@ web_dancplot + web_healplot + web_loveplot + web_babyplot +
 
 ## Listeners' intuitions about songs are similar, worldwide {-}
 
-We compared listeners' intuitions to one another in two ways. First, we compared the responses of listeners in the industrialised cohort to listeners in the smaller-scale society cohort. Second, we measured variation in listener responses varied across linguistic subgroups of the industrialised cohort.
+We compared listeners' intuitions to one another in two ways. First, we compared the responses of listeners in the industrialised cohort to listeners in the smaller-scale society cohort. Second, we measured the variation in listener responses across linguistic subgroups of the industrialised cohort.
 
 ### Comparison of listeners across industrialised and smaller-scale societies {-}
 
-```{r dataset_correlations}
+As a general test of cross-cohort similarity, we computed Pearson correlations of the song-wise mean ratings on each dimension from each cohort. The four correlations were positive and statistically significant (Figure 3a), but varied in magnitude, with the highest correlations in "...for dancing" ($r = `r cors$danc$estimate %>% r2`$) and "...to soothe a baby" ($r = `r cors$baby$estimate %>% r2`$). The correlations in the contexts of healing and expressing love were also statistically significant, but were lower; note that the data in these two dimensions in the smaller-scale societies are relatively noisy (see SI Text 1.4 for an analysis of noise ceilings). Readers can also explore the results in Figure 3a in an interactive audio version of the plot, at [https://www.themusiclab.org/vocal-interpretations](https://www.themusiclab.org/vocal-interpretations).
 
-# Compute correlations between ind and SS cohorts for ratings on each dimension 
-cors <- tibble(
-  x = c("web_danc", "web_baby", "web_love", "web_heal"),
-  y = c("field_danc", "field_baby", "field_love", "field_heal")
-) %>% 
-  mutate(test = map2(x, y, ~ cor.test(combined_data[[.x]], combined_data[[.y]]) %>% tidy)) %>% 
-  unnest(test) %>% 
-  mutate(name = str_extract(x, "(?<=_).*")) %>% 
-  split(.$name)
+We then repeated this analysis with an alternate approach, using stratified bootstrapping to estimate the variability in each correlation, given the much larger heterogeneity of the industrialised cohort (Figure S3). The findings repeated, with modestly attenuated effect sizes. Such reduced effect sizes are to be expected given the increased sampling error due to sampling a smaller number of observations per song.
 
-```
+These correlations likely underestimate the true effect sizes, moreover, for two reasons. First, there were substantive task differences between the two cohorts: the smaller-scale society cohort used a 3-point rating scale (with modified wording) instead of the industrialised cohort's 4-point scale, and the smaller-scale society listeners provided ratings on four "distractor" behavioural contexts that were not represented in the corpus, in contrast to the industrialised cohort who rated only two. Such task differences should, in principle, only reduce the measurable correlations across cohorts.
 
-As an overall test of cross-cohort similarity, we simply computed Pearson correlations of the song-wise mean ratings on each dimension. The four correlations were positive and statistically significant (Figure 3a), but varied in magnitude, with the highest correlations in "...for dancing" ($r = `r cors$danc$estimate %>% r2`$) and "...to soothe a baby" ($r = `r cors$baby$estimate %>% r2`$).
+Second, in the smaller-scale societies, each song excerpt was rated by far fewer listeners than in the industrialised societies. This difference produced a significantly higher standard error of the mean for a given song in the smaller-scale society cohort, relative to the industrialised cohort (e.g., mean *SE* for lullabies: `r r2(mean(fielddat$se_baby))` in smaller-scale societies vs. `r r2(mean(webdat$se_baby))` in industrialised societies). This limited the explainable variance in the smaller-scale society data and is likely to bias the cross-cohort correlations downwards; we attempted to compensate for this bias with noise ceiling metrics (see SI Text 1.4 and ref. @Cowen2020a).
 
-As a robustness check, we repeated this analysis with an alternate approach, using stratified bootstrapping to estimate the variability in each correlation, given the much larger heterogeneity of the industrialised cohort (Figure S2). The findings repeated, with modestly attenuated effect sizes.
+As a more conservative test of the differences between the intuitions of listeners in the two cohorts, we compared the *z*-scored ratings of the industrialised cohort for each behavioural context on each dimension to those of the smaller-scale society cohorts, with *t*-tests (i.e., testing for mean differences of each of the 16 half-violins in Figure 2: 4 behavioural contexts $\times$ 4 dimensions). None of the 16 comparisons were statistically significant; the largest cohort-wise difference had $p = .09$, above the conventional alpha of .05 and well above a more conservative Bonferroni-adjusted alpha for 16 comparisons of .003.
 
-For a more conservative test for differences between the intuitions of listeners in the two cohorts, we compared the *z*-scored ratings of the industrialised cohort for each behavioural context on each dimension to those of the smaller-scale society cohorts, with *t*-tests (i.e., testing for mean differences of each of the 16 half-violins in Figure 2: 4 behavioural contexts $\times$ 4 dimensions). None of the 16 comparisons were statistically significant; the largest cohort-wise difference had $p = .09$, above the conventional alpha of .05 (and well above a more conservative Bonferroni-adjusted alpha for 16 comparisons of .003).
+Thus, we found little evidence for cohort-wise differences in listener intuitions and good evidence for cohort-wise similarities.
 
-Thus, we found little evidence for cohort-wise differences in listener intuitions, and good evidence for cohort-wise similarities.
 
-```{r cross-cohort pairwise comparisons, include=FALSE, eval=FALSE}
-# Print the results of 16 pairwise t-tests, comparing z-scored ratings in ind. and SS cohorts for each song type x rating dimension. 
-# None of the tests approach significance. The code is left here as evidence of this.
+```{r fig3, fig.width=10, fig.height=8, fig.cap="\\textbf{Figure 3 | Consistency of listeners' intuitions across cohorts and across languages.} \\textbf{a.} The mean song-wise ratings of listeners in the industrialised and smaller-scale societies, across the full corpus of songs, correlated with one another, on each of the four dimensions of interest. In the scatterplots, each point denotes a song-wise mean plotted in terms of its rating by participants in the industrialised societies ($x$-axis) and participants in the smaller-scale societies ($y$-axis). The highlighted dots denote songs whose behavioural context corresponds with the dimension of that plot (e.g., the blue points in the left-most \\``...for dancing\\'' plot denote dance songs). The line, shaded 95\\% confidence band, and associated statistics in each plot are computed via simple linear regressions. The diagonal dashed line indicates a hypothetical 1:1 relationship between the two cohorts. Note that participants in the smaller-scale societies used a 3-point scale rather than a 4-point scale; see Methods. \\textbf{b.} Within each linguistic subgroup of the industrialised societies, the main effects repeated consistently. The forest plots show the mean ratings of songs originally used in each of the four behavioural contexts, on each of the dimensions (one per plot), within each of the 28 linguistic subgroups (i.e., each row of points summarises data from one subgroup, such as native speakers of Urdu). For instance, the rightmost plot shows that lullabies (in green) were rated higher on the dimension \\``...to soothe a baby\\'' in all 28 subgroups. The colours of the points correspond to the behavioural contexts, using the same scale as Figure 2 (dance songs in blue, healing songs in red, love songs in yellow, and lullabies in green)."}
 
-tmp1 <- webdat %>% 
-  select(song, songfunction, w_danc=zm_danc, w_baby=zm_baby, w_heal=zm_heal, w_love=zm_love)
-tmp2 <- fielddat %>% 
-  select(song, f_danc=zm_danc, f_baby=zm_baby, f_heal=zm_heal, f_love=zm_love)
-z_comparison <- tmp1 %>% left_join(tmp2, by="song")
-tmp3 <-  webdat %>% 
-  select(song, songfunction, zm_danc, zm_baby, zm_heal, zm_love)
-tmp4 <- fielddat %>% 
-  select(song,songfunction, zm_danc, zm_baby, zm_heal, zm_love)
-
-ff_bayes <- bind_rows("web" = tmp3, "field" = tmp4, .id = "cohort") 
-# save results
-#write_csv(ff_bayes, here("results","ff_bayes.csv")
-
-for (i in 1:length(unique(z_comparison$songfunction))) {
-  
-  tmp <- z_comparison[z_comparison$songfunction==unique(z_comparison$songfunction)[i],]
-  
-  # dance comparison 
-  print(paste0(as.character(unique(tmp$songfunction)), " songs ratings on the dancing dimension:"))
-  print(t.test(tmp$w_danc, tmp$f_danc))
-  
-  print(paste0(as.character(unique(tmp$songfunction)), " songs ratings on the soothing a baby dimension:"))
-  # baby comparison 
-  print(t.test(tmp$w_baby, tmp$f_baby))
-  
-  print(paste0(as.character(unique(tmp$songfunction)), " songs ratings on the healing dimension:"))
-  # healing comparison 
-  print(t.test(tmp$w_heal, tmp$f_heal))
-  
-  print(paste0(as.character(unique(tmp$songfunction)), " songs ratings on the expressing love dimension:"))
-  # love comparison 
-  print(t.test(tmp$w_love, tmp$f_love))
-}
-
-```
-
-```{r fig3, fig.width=10, fig.height=8, fig.cap="\\textbf{Figure 3 | Consistency of listeners' intuitions across cohorts and across languages.} \\textbf{a,} The mean song-wise ratings of listeners in the industrialised and smaller-scale societies, across the full corpus of songs, correlated with one another, on each of the four dimensions of interest. In the scatterplots, each point denotes a song-wise mean plotted in terms of its rating by participants in the industrialised societies ($x$-axis) and participants in the smaller-scale societies ($y$-axis). The highlighted dots denote songs whose behavioural context corresponds with the dimension of that plot (e.g., the blue points in the left-most plot, \"...for dancing\", denote dance songs). The line, shaded 95\\% confidence band, and associated statistics in each plot are computed via simple linear regressions. The diagonal dashed line indicates a hypothetical 1:1 relationship between the two cohorts. Note that participants in the smaller-scale societies used a 3-point scale rather than a 4-point scale; see Methods. \\textbf{b} Within each linguistic subgroup of the industrialised societies, the main effects repeated consistently. The forest plots show the mean ratings of songs originally used in each of the four behavioural contexts, on each of the dimensions (one per plot), within each of the 28 linguistic subgroups (i.e., each row of points summarises data from one subgroup, such as native speakers of Urdu). For instance, the rightmost plot shows that lullabies (in green) were rated higher on the dimension \"...to soothe a baby\" in all 28 subgroups. The colours of the points correspond to the behavioural contexts, using the same scale as Figure 2 (dance songs in blue, healing songs in red, love songs in yellow, and lullabies in green)."}
-
-corr_plotter <- function(x_var, y_var, col_var, title_var, target_cat) {
+corr_plotter <- function(x_var, y_var, col_var, title_var, target_cat, y_label) {
   ggplot(combined_data, aes(x={{x_var}}, y={{y_var}} * (4/3))) +
     geom_point(aes(fill = songfunction == target_cat, alpha = songfunction == target_cat),
                shape = 21, color = "black") + 
@@ -798,23 +613,24 @@ corr_plotter <- function(x_var, y_var, col_var, title_var, target_cat) {
                        expand = c(0,0)) + 
     scale_x_continuous(expand = c(0,0), limits = c(1,4)) +
     labs(title = title_var,
-         y = "Smaller-scale societies", 
+         y = y_label, 
          x = "Industrialised societies") +
     coord_fixed(ratio = 1) +
     theme_classic() +
-    theme(text = element_text(size=11, family = "serif"),
+    theme(text = element_text(size=11),
           axis.text.x = element_text(size = 8),
-          plot.title = element_markdown(size = 15, halign = .5),
+          plot.title = element_text(size = 15, face = "italic"),
           panel.grid = element_blank(),
           legend.position = "none")
 }
 
-danc_cor <- corr_plotter(web_danc, field_danc, color_scheme[1], "<i style='color:#000000;'>\"...for dancing\"</i>", "danc")
-heal_cor <- corr_plotter(web_heal, field_heal, color_scheme[2], "<i style='color:#000000;'>\"...to heal illness\"</i>", "heal")
-love_cor <- corr_plotter(web_love, field_love, color_scheme[3], "<i style='color:#000000;'>\"...to express love for<br>another person\"</i>", "love")
-baby_cor <- corr_plotter(web_baby, field_baby, color_scheme[4], "<i style='color:#000000;'>\"...to soothe a baby\"</i>", "baby")
+danc_cor <- corr_plotter(web_danc, field_danc, color_scheme[1], "''...for dancing''", "danc", y_label = "Smaller-scale societies")
+heal_cor <- corr_plotter(web_heal, field_heal, color_scheme[2], "''...to heal illness''", "heal", y_label = NULL)
+love_cor <- corr_plotter(web_love, field_love, color_scheme[3], "''...to express love \nfor another person''", "love", y_label = NULL)
+baby_cor <- corr_plotter(web_baby, field_baby, color_scheme[4], "''...to soothe a baby''", "baby", y_label = NULL)
 
-languages_plotter <- function(funk, funk_text, title_var) {
+
+languages_plotter <- function(funk, funk_text, title_var, x_label) {
   webraw %>% 
     mutate(
       songfunction = factor(songfunction, levels = c("danc", "heal", "love", "baby")),
@@ -826,7 +642,7 @@ languages_plotter <- function(funk, funk_text, title_var) {
     guides(alpha = "none") + 
     labs(y = "Rating", 
          title = NULL,
-         x = "Industrialised society cohorts") +
+         x = x_label) +
     lims(y = c(1,4)) +
     theme_classic() + 
     coord_flip() +
@@ -836,138 +652,62 @@ languages_plotter <- function(funk, funk_text, title_var) {
           aspect.ratio = 1)
 }
 
-danc <- languages_plotter(danc, "danc", "Dance")
-lullaby <- languages_plotter(baby, "baby", "Lullaby")
-healing <- languages_plotter(heal, "heal", "Healing")
-love <- languages_plotter(love, "love", "Love")
+danc <- languages_plotter(danc, "danc", "Dance", x_label = "Industrialised society cohorts")
+lullaby <- languages_plotter(baby, "baby", "Lullaby", x_label = NULL)
+healing <- languages_plotter(heal, "heal", "Healing", x_label = NULL)
+love <- languages_plotter(love, "love", "Love", x_label = NULL)
 
-danc_cor + heal_cor + love_cor + baby_cor + 
+danc_cor + heal_cor + love_cor + baby_cor +
   danc + healing + love + lullaby +
-  plot_layout(ncol = 4) + 
+  plot_layout(ncol = 4) +
   plot_annotation(tag_levels = list(c("a", rep("", 3), "b", rep("", 3))))
 
-```
-
-```{r warning=FALSE, include=FALSE}
-# regressing accuracy on song type for each of the 28 linguistic subcohorts
-
-webdat_bylang <- fulldata %>% 
-  filter(study == "web") %>% 
-  group_by(natlang_name, song, songfunction) %>% 
-  # averaging scores
-  summarize(across(
-    c(danc, heal, baby, love, achi, visi),
-    ~ mean(.x, na.rm = T),
-    .names = "mean_{.col}")) %>% 
-  ungroup() %>% 
-  # z-scoring
-  mutate(across(
-    c(mean_danc, mean_baby, mean_heal, mean_love),
-    ~ scale(.x),
-    .names = "zm_{.col}"
-  )) %>% 
-  rename_with(~ str_remove(.x, "mean_"), contains("zm")) %>% 
-  # dummy variables
-  mutate(var = 1, temp = songfunction,
-         songfunction = factor(songfunction, levels = c("danc", "heal", "love", "baby"))) %>% 
-  pivot_wider(names_from = temp, values_from = var, values_fill = 0)
-
-
-webdat_bylang <- webdat_bylang %>% drop_na()
-
-get_p.values <- function(song_type) {
-  map_dfr(unique(webdat_bylang$natlang_name) %>% set_names, ~ {
-    x <- reformulate("danc + baby + love + heal - 1", response = str_c("zm_", song_type))
-    m <- lm(x, webdat_bylang %>% filter(natlang_name == .x))
-    tidy(m) %>% filter(term == song_type) %>% select(p.value) 
-  }, .id = "country")
-}
-
-danc_df <- get_p.values("danc")
-baby_df <- get_p.values("baby")
-heal_df <- get_p.values("heal")
-love_df <- get_p.values("love")
 
 ```
+
+
 
 ### Internal consistency of the industrialised cohort {-}
 
 We measured how similar the responses of participants *within* the industrialised cohort were to one another with two approaches. In both cases, we split the industrialised society sample into 28 subgroups, based on the 28 different native languages spoken by the participants.
 
-First, we re-ran the main song-wise analysis within each subgroup, providing (in effect) a 28-fold replication attempt of the main analysis for each of the four dimensions. The replications were generally successful (Figure 3b). 
+First, we re-ran the main song-wise analysis within each subgroup, providing (in effect) a 28-fold replication attempt of the main analysis for each of the four dimensions. The replications were generally successful (Figure 3b). In `r sum(danc_df$p.value < .001)` of the 28 linguistic subgroups, dance songs were rated significantly above the base rate of "...for dancing" (*p*s < .001); only the Korean-language subgroup did not rate dance songs significantly above the base rate across all songs (*p* `r summary(lm(zm_danc ~ danc + baby + love + heal - 1, data = webdat_bylang[webdat_bylang$natlang_name=='Korean',]))$coefficients[13] %>% fp()`), but nevertheless rated the other three groups of songs as inappropriate for dancing (*p*s < .0001). All `r sum(baby_df$p.value < .0001)` linguistic subgroups rated lullabies above the base rate of "...to soothe a baby" (*p*s < .0001).
 
-In `r sum(danc_df$p.value < .001)` of the 28 linguistic subgroups, dance songs were rated significantly above the base rate of "...for dancing" (*p*s < .001); only the Korean-language subgroup did not rate dance songs significantly above the base rate across all songs (*p* `r summary(lm(zm_danc ~ danc + baby + love + heal - 1, data = webdat_bylang[webdat_bylang$natlang_name=='Korean',]))$coefficients[13] %>% fp()`), but nevertheless rated the other three groups of songs as inappropriate for dancing (*p*s < .0001). All `r sum(baby_df$p < .0001)` linguistic subgroups rated lullabies above the base rate of "...to soothe a baby" (*p*s < .0001).
+As in the main effects, results in healing songs were somewhat weaker, with healing songs identified as most appropriate in the context of "...to heal illness" by `r sum(heal_df$p.value < .05)` of the 28 subgroups (*p*s < .05). Only `r sum(love_df$p.value < .05)` subgroups rated love songs significantly higher (*p*s < .05) than the base rate of "...to express love for another person" across all songs. 
 
-As in the main effects, results in healing songs were somewhat weaker, identified as most appropriate in the context of "...to heal illness" by `r sum(heal_df$p.value < .05)` of the 28 subgroups (*p*s < .05). Only `r sum(love_df$p.value < .05)` subgroups rated love songs significantly higher (*p*s < .05) than the base rate of "...to express love for another person" across all songs. 
-
-Second, we used a similar correlation approach to the one reported above to measure the range of similarities. We built bootstrap samples of correlations between randomly selected pairs of linguistic subgroups, and tested the distribution of correlations against a null hypothesis of mean $r = 0$. The correlations were high for all four dimensions ("...for dancing": mean $r = `r boots$danccors$estimate %>% r2`$; "...to soothe a baby": mean $r = `r boots$babycors$estimate %>% r2`$; "...to heal illness": mean $r = `r boots$healcors$estimate %>% r2`$; "...to express love for another person": mean $r = `r boots$lovecors$estimate %>% r2`$; all $ps < 0.0001$).
+Second, we used a similar correlation approach to the one reported above to measure the range of similarities. We built bootstrap samples of correlations between randomly selected pairs of linguistic subgroups and tested the distribution of correlations against a null hypothesis of mean $r = 0$. The correlations were high for all four dimensions ("...for dancing": mean $r = `r boots$danccors$estimate %>% r2`$; "...to soothe a baby": mean $r = `r boots$babycors$estimate %>% r2`$; "...to heal illness": mean $r = `r boots$healcors$estimate %>% r2`$; "...to express love for another person": mean $r = `r boots$lovecors$estimate %>% r2`$; all $ps < .0001$).
 
 In sum, the intuitions of listeners worldwide (both across industrialised and smaller-scale societies and within industrialised societies) were similar to one another.
 
 ## Cultural proximity is relatively uninformative to listeners {-}
 
-```{r exploratory_analysis_models}
+Having found a number of similarities across the intuitions of listeners worldwide, last, we explored a possible factor that could explain *differences* between them: cultural proximity between listener and singer.
 
-# fit mixed-effects models for each of the song-types
-ran_mods <- webraw %>% 
-  pivot_longer(names_to = "type", values_to = "z", cols = c(zm_danc, zm_baby, zm_heal, zm_love), names_prefix = "zm_") %>% 
-  split(.$type) %>% 
-  map(~ lmer(z ~ songfunction - 1 + (1|indx) + (1|song) + (1|cohort), data = .) %>% tidy %>% 
-        mutate(term = str_remove(term, "songfunction")) %>% 
-        split(.$term))
+If culture-specific musical "rules" explain differences in a given song from the worldwide "norm" for songs in a given behavioural context (i.e., leading to variability in listener intuitions in the effects reported above) then one might expect clear relations between cultural familiarity and listener accuracy. Specifically, when listeners hear songs from cultures that are more similar to theirs, their intuitions about behavioural context in a song should more closely match that song's actual behavioural context.
 
-# model on raw scale for comparison
-ran_mods$raw <- lmer(danc ~ songfunction - 1 + (1|indx) + (1|song) + (1|cohort), data = webraw) %>% tidy %>%
-  mutate(term = str_remove(term, "songfunction")) %>%  split(.$term)
+To operationalise this hypothesis, we used two measures of cultural proximity between listener and song: linguistic and geographic distance. Phylogenetic distance between languages is often used to model cultural transmission of behaviours, such as linguistic features [@Dunn2011], vocalisation styles [@Hilton2022a], or camel-herding practices [@Mace1994]. Research on the universality of emotional facial expressions, for instance, has found that cross-cultural emotion recognition is higher when the judge's native language is closer to that of the poser [@Scherer2001]. 
 
-
-# function to compute mixed-effects model + pull marginal effects estimates
-prox_function <- function(prox_metric) {
-  x <- reformulate(c(prox_metric, "(1|song)", "(1|indx)"), response = "score")
-  
-  webraw %>% 
-    pivot_longer(names_to = "type", values_to = "score", cols = c(danc, baby, heal, love)) %>% 
-    filter(type == songfunction) %>% 
-    split(.$type) %>% 
-    map(~ {
-      m <- lmer(x, data = .x)
-      list(
-        # Compute marginal effects
-        effects = ggpredict(m, prox_metric) %>% tibble,
-        # return full model
-        mod = m %>% tidy %>% 
-          # cleaning up names
-          mutate(term = str_remove(term, prox_metric),
-                 term = str_replace_all(term, "[^[:alnum:]]", "")) %>% 
-          split(.$term)
-      )
-    })
-}
-
-prox_mods <- prox_function("langshare")
-geo_mods <- prox_function("geoshare_sub")
-
-```
-
-While we have shown a number of similarities across the intuitions of listeners worldwide, last, we explored a possible factor that could explain *differences* between them: cultural proximity between listener and singer. 
-
-If culture-specific musical "rules" explain differences in a given song from the worldwide "norm" for songs in a given behavioural context (i.e., leading to variability in listener intuitions in the effects reported above) then one might expect clear relations between cultural familiarity and listener accuracy. Specifically, when listeners hear songs from cultures that are *more similar* to theirs, their intuitions about behavioural context in a song should more closely match that song's *actual* behavioural context.
-
-To operationalise this hypothesis, we used two measures of cultural proximity between listener and song: linguistic and geographic distance. Phylogenetic distance between languages is often used to model cultural transmission of behaviours, such as camel-herding practices [@Mace1994], linguistic features [@Dunn2011], or vocalisation styles [@Hilton2022a]. Research on universalities in emotional facial expressions, for instance, has found that cross-cultural emotion recognition is higher when the judge's native language is closer to that of the poser's [@Scherer2001]. Complementing the linguistic-distance approach, we also used geographical distance as a proxy for cultural distance and between-group exposure, as physical distance may predict cultural similarity [@Elfenbein2002; @Wood2016]. We used Glottolog [@Hammarstrom2019] to classify local languages into language families and the Human Relations Area Files ([ehrafworldcultures.yale.edu](http://ehrafworldcultures.yale.edu/)) World Sub-region typology to classify geographic location for each culture, as in previous research [@Mehr2019].
+Complementing the linguistic-distance approach, we also used geographical distance as a proxy for cultural distance and between-group exposure, as physical distance may predict cultural similarity [@Elfenbein2002; @Wood2016]. We used Glottolog [@Hammarstrom2019] to classify local languages into language families and the Human Relations Area Files ([http://ehrafworldcultures.yale.edu](http://ehrafworldcultures.yale.edu/)) World Sub-region typology to classify geographic location for each culture, as in previous research [@Mehr2019].
 
 We split each participant's data into two sets of trials: (i) trials where the participant rated a song sung in a language from their own language family; and (ii) trials where the participant rated songs that were sung in a language from a different language family (for a full list of language families, see Table 1). For the geographic analysis, we did the same, but using world subregions. 
 
-For example, in a participant recruited in Istanbul, Turkey who speaks Turkish, a trial with a song sung in Turkmen would be marked as linguistically "shared", since both Turkmen and Turkish belong to the Turkic language family. A song sung in Greek would be marked as linguistically "different", since Greek is an Indo-European language. On the other hand, a trial with a song recorded in Greece would be marked as geographically "shared", since the song and participant belong to the same geographic subregion (Southeastern Europe). Linguistic and geographic markers of proximity can, but do not necessarily have to overlap, as in the case of the Turkish listener and Greek song.
+For example, for a participant recruited in Turkey who speaks Turkish, a trial with a song sung in Turkmen would be marked as linguistically "shared", since both Turkmen and Turkish belong to the Turkic language family. A song sung in Greek would be marked as linguistically "different", since Greek is an Indo-European language (not a Turkic language). On the other hand, a trial with a song recorded in Greece would be marked as geographically "shared", since the song and participant belong to the same geographic subregion (both Greece and Turkey are in Southeastern Europe). Linguistic and geographic markers of proximity can overlap, but not necessarily.
 
-We then tested the effect of these two proxies for cultural familiarity using mixed-effects models, with a categorical fixed effect for whether a participant shared a language family or geographical area with the song, and random effects for participant and song. The results showed statistically significant effects of sharing a language family for discriminating dance ($\beta_{shared}$ = `r prox_mods$danc$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$danc$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$danc$mod$Shared$p.value %>% fp`), lullaby ($\beta_{shared}$ = `r prox_mods$baby$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$baby$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$baby$mod$Shared$p.value %>% fp`), and love songs ($\beta_{shared}$ = `r prox_mods$love$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$love$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$love$mod$Shared$p.value %>% fp`), but not healing songs ($\beta_{shared}$ = `r prox_mods$heal$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$heal$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$heal$mod$Shared$p.value %>% fp`; Figure 4). 
+We then tested the effect of these two proxies for cultural familiarity using mixed-effects models, with a categorical fixed effect for whether a participant shared a language family or geographical area with the song, and random effects for participant and song. The results showed statistically significant effects of sharing a language family for discriminating dance ($\beta$ = `r prox_mods$danc$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$danc$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$danc$mod$Shared$p.value %>% fp`), lullaby ($\beta$ = `r prox_mods$baby$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$baby$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$baby$mod$Shared$p.value %>% fp`), and love songs ($\beta$ = `r prox_mods$love$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$love$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$love$mod$Shared$p.value %>% fp`), but not healing songs ($\beta$ = `r prox_mods$heal$mod$Shared$estimate %>% r2`, *SE* = `r prox_mods$heal$mod$Shared$std.error %>% r3`, $p$ `r prox_mods$heal$mod$Shared$p.value %>% fp`; Figure 4). 
 
-These effects were very small, however: the largest, found for lullabies, showed that sharing a language family resulted in an estimated boost to "used to soothe a baby" ratings of `r prox_mods$baby$mod$Shared$estimate %>% r2` on a 4-point scale — equivalent to only ~`r (prox_mods$baby$mod$Shared$estimate / 4) %>% percent` of the whole scale and only ~`r round((prox_mods$baby$mod$Shared$estimate)/(ran_mods$raw$danc$estimate - ran_mods$raw$baby$estimate)*100,0)`% of the estimated difference between dance songs and lullabies on the "...for dancing" dimension. The magnitude of the effect of cultural proximity was minimal compared to the variance explained by the actual behavioural context and universal regularities in the songs' musical features. 
+These effects were very small, however: the largest, found for lullabies, showed that sharing a language family resulted in an estimated boost to the "...to soothe a baby" dimension of `r prox_mods$baby$mod$Shared$estimate %>% r2` on a 4-point scale — equivalent to only ~`r (prox_mods$baby$mod$Shared$estimate / 4) %>% percent` of the whole scale and only ~`r round((prox_mods$baby$mod$Shared$estimate)/(ran_mods$raw$danc$estimate - ran_mods$raw$baby$estimate)*100,0)`% of the estimated difference between dance songs and lullabies on the "...for dancing" dimension. The magnitude of the effect of cultural proximity was therefore minimal compared to the variance explained by the actual behavioural context and universal regularities in the songs' musical features. 
 
-Results were comparable for geographic proximity, with marginally larger effects for dance ($\beta_{shared}$ = `r geo_mods$danc$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$danc$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$danc$mod$Shared$p.value %>% fp`), lullaby ($\beta_{shared}$ = `r geo_mods$baby$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$baby$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$baby$mod$Shared$p.value %>% fp`), and love songs ($\beta_{shared}$ = `r geo_mods$love$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$love$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$love$mod$Shared$p.value %>% fp`), and no significant effect for healing songs ($\beta_{shared}$ = `r geo_mods$heal$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$heal$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$heal$mod$Shared$p.value %>% fp`). Here, the largest effect was found for sharing a geographical area when rating a dance song on the "used for dancing" dimension, resulting in a `r geo_mods$danc$mod$Shared$estimate %>% r2` increase on a 4-point scale (equivalent to ~`r (geo_mods$danc$mod$Shared$estimate / 4) %>% percent` of the scale). Like the effects of linguistic proximity, geographic proximity had a statistically significant but practically nonsignificant effect.
+Results were comparable for geographic proximity, with marginally larger effects for dance ($\beta$ = `r geo_mods$danc$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$danc$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$danc$mod$Shared$p.value %>% fp`), lullaby ($\beta$ = `r geo_mods$baby$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$baby$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$baby$mod$Shared$p.value %>% fp`), and love songs ($\beta$ = `r geo_mods$love$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$love$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$love$mod$Shared$p.value %>% fp`), and no significant effect for healing songs ($\beta$ = `r geo_mods$heal$mod$Shared$estimate %>% r2`, *SE* = `r geo_mods$heal$mod$Shared$std.error %>% r3`, $p$ `r geo_mods$heal$mod$Shared$p.value %>% fp`). Here, the largest effect was found for sharing a geographical area when rating a dance song on the "...for dancing" dimension, resulting in a `r geo_mods$danc$mod$Shared$estimate %>% r2` increase on a 4-point scale (equivalent to ~`r (geo_mods$danc$mod$Shared$estimate / 4) %>% percent` of the scale). Like the effects of linguistic proximity, geographic proximity had a statistically significant but practically nonsignificant effect.
 
 Because culturally close groups are likely to share both a language *and* be in close geographic proximity, we also explored potential additive effects of sharing a language family and geographic subregion. Studying each of the four behavioural contexts in isolation, we regressed the listeners' ratings (from the dimension corresponding to that behavioural context, e.g., for dance songs, we studied the dimension "...for dancing") on two binary variables: language family (shared vs. not shared) and geographic subregion (shared vs. not shared). The interaction between the two variables was not significant for any of the four behavioural contexts, however, meaning that the effect of sharing a geographic region was no different depending on whether the listener was also more familiar with the language of the song (statistical reporting is in Table S1).
 
-```{r fig4, fig.width=4.5, fig.height=5, fig.cap="\\textbf{Figure 4 | Increased linguistic or geographic proximity between listeners and singers does not substantially improve performance.} Because both songs and listeners came from global samples, in some cases, the culture of the listener is \\textit{more related} to the culture of the singer than others. This could, in principle, make it easier for listeners to make inferences concerning the behavioural context of unfamiliar songs. We found little evidence for such an effect, however. Each panel plots the estimated rating of a behavioural context on its corresponding dimension (e.g., dance songs on the \"for dancing\" dimension). The black point denotes the estimated rating when the listener and song \\textit{share} a linguistic family (left) or geographic sub-region (right), and the grey point is the estimated rating when the listener and song \\textit{do not share} a linguistic family (left) or geographic sub-region (right). The error bars denote 95\\% confidence intervals. In three out of the four behavioural contexts (dance songs, love songs and lullabies), both proxies for cultural familiarity with the song increased listeners' ratings of the correct behavioural context dimension by a statistically significant, but practically nonsignificant amount. The *n*s denote numbers of trials per category, not numbers of participants. The vertical dashed lines indicate the average rating across all songs, regardless of original behavioural context. $^{\\ast}p < 0.05$, $^{\\ast\\ast}p < 0.01$, $^{\\ast\\ast\\ast}p < 0.001$."}
+Two proxies for cultural proximity therefore explained a small proportion of the variance in listener responses relative to the variance explained by the actual behavioural context of the song. This suggests that listeners were primarily relying on universal regularities in the songs' musical features to inform their inferences. 
+
+Such an interpretation is bolstered by previous work showing the consistency and distinctiveness with which musical features characterise dance songs, healing songs and lullabies worldwide, and how perceptual judgements reflect those features. For example, acoustic regularities underlying the songs used in particular behavioural contexts are robust enough to enable machine classification of behavioural contexts, on the basis of only musical features, at a high level of accuracy in held-out data [@Mehr2019]. The acoustic regularities are also robust enough to enable reliable classification of songs by children [@Hilton2022b], whose inferences are informed by similar musical features to adults' inferences. Further, subjective ratings of musical (e.g., perceived tempo) and contextual features (e.g., perceived number of singers) by non-musicians differentiate the four song types. This leads listeners to make non-random errors on the basis of similar musical features that span behavioural contexts; for example, when a non-lullaby shares musical features with a prototypical lullaby, it is more likely to be rated highly as "...to soothe a baby" [@Mehr2018a]. 
+
+As a final exploratory analysis, we asked whether the musical features studied in these prior analyses similarly predicted listeners' ratings here, and if so, whether these musical features were in line with the features previously found to characterise each song type. Indeed, many of the features previously found to characterise dance songs, healing songs and lullabies (such as tempo, accent structure, and a steady beat) also predicted listeners' ratings on the respective behavioural context dimensions. The full results are reported in SI Text 1.5.
+
+```{r fig4, fig.width=4.5, fig.height=5, fig.cap="\\textbf{Figure 4 | Increased linguistic or geographic proximity between listeners and singers does not substantially improve performance.} Because both songs and listeners came from global samples, in some cases, the culture of the listener is more related to the culture of the singer than others. This could, in principle, make it easier for listeners to make inferences concerning the behavioural context of unfamiliar songs. We found little evidence for such an effect, however. Each panel plots the estimated rating of a behavioural context on its corresponding dimension (e.g., dance songs on the \"...for dancing\" dimension). The black points denote the estimated ratings when the listener and song share a linguistic family (left) or geographic sub-region (right), and the grey points denote the estimated ratings when the listener and song do not share a linguistic family (left) or geographic sub-region (right). The error bars denote 95\\% confidence intervals. In three out of the four behavioural contexts (dance songs, love songs, and lullabies), both proxies for cultural familiarity with the song increased listeners' ratings of the correct behavioural context dimension by a statistically significant, but practically nonsignificant amount. The *n*s denote numbers of trials per category, not numbers of participants. The vertical dashed lines indicate the average rating across all songs, regardless of original behavioural context. $^{\\ast}p < 0.05$, $^{\\ast\\ast}p < 0.01$, $^{\\ast\\ast\\ast}p < 0.001$."}
 
 base_rates <- webraw %>% 
   pivot_longer(names_to = "function", values_to = "rating", cols = c(danc, baby, heal, love, achi, visi)) %>% 
@@ -1003,7 +743,7 @@ pull_highest <- function(type, dist_type) {
   plot_data %>% filter(songfunction == type, dist == dist_type) %>% pull(conf.high) %>% max
 }
 
-p <- ggplot(plot_data, aes(
+fig4_p <- ggplot(plot_data, aes(
   x = x,
   y = predicted,
   ymin = conf.low,
@@ -1017,20 +757,19 @@ p <- ggplot(plot_data, aes(
                      guide = guide_legend(reverse = TRUE)) + 
   new_scale_color() +
   geom_hline(aes(yintercept = avg, 
-                 color = fct_relevel(songfunction, levels = c("danc", "heal", "love", "baby"))),
+                 color = fct_relevel(songfunction, c("danc", "heal", "love", "baby"))),
              lty = "dashed", show.legend = FALSE) +
   scale_color_manual(values = color_scheme) +
-  facet_grid(fct_relevel(songfunction, "danc", "heal", "love", "baby") ~ fct_relevel(dist, "lang", "geo"),
+  facet_grid(fct_relevel(songfunction, c("danc", "heal", "love", "baby")) ~ fct_relevel(dist, c("lang", "geo")),
              scales = "free", switch = "y",
              labeller = labeller(.cols = c(geo = "Geographic Area", lang = "Language Family"),
                                  .rows = c(danc = "Dance", heal ="Healing", love = "Love", baby = "Lullaby"))) +
   coord_flip() +
   lims(y = c(1, 4)) +
   labs(y = "Rating") +
-  geom_text(aes(label = paste("n =", n)), y = 1.65, show.legend = FALSE, color = "black", size = 2.5, family="serif") +
+  geom_text(aes(label = paste("n =", n)), y = 1.65, show.legend = FALSE, color = "black", size = 2.5) +
   theme_light() +
-  theme(text = element_text(family = "serif"),
-        plot.title = element_text(size = 16, face = "bold", vjust = 1),
+  theme(plot.title = element_text(size = 16, face = "bold", vjust = 1),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.title.y = element_blank(),
@@ -1045,7 +784,7 @@ p <- ggplot(plot_data, aes(
 for (dist_type in c("lang", "geo")) {
   for (song_type in c("danc", "heal", "love", "baby")) {
     if ((plot_data %>% filter(songfunction == song_type, x == "Shared", dist == dist_type) %>% pull(p_annotation)) != "n.s.") {
-      p <- p +
+      fig4_p <- fig4_p +
         geom_segment(data = tibble(songfunction = song_type, dist = dist_type), x = 1, xend = 2,
                      y = pull_highest(song_type, dist_type) + .1, yend = pull_highest(song_type, dist_type) + .1, size = .4, inherit.aes = F) +
         geom_text(data = plot_data %>% filter(songfunction == song_type, dist == dist_type), aes(label = p_annotation),
@@ -1054,8 +793,9 @@ for (dist_type in c("lang", "geo")) {
   }
 }
 
+
 # change strip background colors
-p2 <- ggplot_gtable(ggplot_build(p))
+p2 <- ggplot_gtable(ggplot_build(fig4_p))
 stripr <- which(grepl('strip-l', p2$layout$name))
 k <- 1
 for (i in stripr) {
@@ -1067,29 +807,38 @@ grid::grid.draw(p2)
 
 ```
 
+
 # Discussion {-}
 
-In a global sample of people, residing in both industrialised and smaller-scale societies, and tested predominantly in non-English languages, we find that listeners' inferences about the behavioural contexts of unfamiliar, foreign songs are *accurate*, *similar to one another*, and *relatively uninfluenced by cultural proximity*. Some basic aspects of musical communication are therefore mutually intelligible. These findings generalise prior findings reporting the ability of English-speaking participants recruited online to reliably infer the behavioural contexts of dance, lullaby, and healing songs [@Mehr2018a; @Mehr2019], thereby providing strong evidence for the generality of the effects and for the universality of the phenomenon.
+In a global sample of people residing in both industrialised and smaller-scale societies and tested predominantly in non-English languages, we found that listeners' inferences about the behavioural contexts of unfamiliar, foreign songs are accurate, similar to one another, and relatively uninfluenced by cultural proximity. Moreover, many of the acoustic and musical features universally associated with the types of songs we studied [@Mehr2019] also predicted listeners’ inferences about those very songs. Some basic aspects of musical interpretation therefore appear to be universal and grounded in globally shared perceptual principles.
 
-The practice in cognitive science of focusing solely on English speakers is all-too-common [@Blasi2022]. We note that the use of multiple samples of non-English speakers in the same experiment affords the ability to conduct mini-meta-analyses of key effects. Here, in the case of the participants in industrialised societies, for example, the approach enabled a 28-fold replication of the main analysis, in each linguistic subgroup. The approach also afforded tests of the cross-linguistic consistency of listeners inferences (for the fit of songs to the contexts "...for dancing" and "...to soothe a baby", consistency was especially high), justifying claims about *human* psychology, as opposed to the psychology of a Western, educated, industrialized, rich and democratic (WEIRD) subset of humans [@Henrich2010; @Yarkoni2022].
+These findings generalise prior findings reporting the ability of English-speaking participants recruited online to reliably infer the behavioural contexts of dance, lullaby, and healing songs [@Mehr2018a; @Mehr2019], thereby providing strong evidence for the generality of the effects and for the universality of the phenomenon.
 
-Universal musical inferences, strongest for the contexts of dance and infant care, support theories that music may evolved to signal covert information in these particular contexts [@Hagen2003; @Hagen2009; @Mehr2017], united by the idea that music is a credible signal of a similar kind to vocal signals found across the animal kingdom [@Mehr2021]. 
+The practice in cognitive science of focusing solely on English speakers is all-too-common [@Blasi2022]. The alternative use of many samples of non-English speakers in the same experiment affords the ability to conduct mini-meta-analyses of key effects. Here, in the case of the participants in industrialised societies, for example, the approach enabled a 28-fold replication of the main analysis, in each linguistic subgroup. The approach also afforded tests of the cross-linguistic consistency of listeners' inferences, justifying claims about *human* psychology, as opposed to the psychology of a non-representative subset of humans.
 
-The possibility of universal perceptual mechanisms for musical communication is bolstered by comparisons to other domains, where such mechanisms are already well-established, such as the cross-cultural intelligibility of emotional expression in vocalizations [e.g., @Laukka2021; @Scherer2001], including across species [@Farago2014; @Kamiloglu2020; @Filippi2017]; facial expressions [e.g., @Cowen2021]; and non-referential information in music [@Balkwill1999; @Cowen2020; @Fritz2009; @Sievers2013]. Although we have not studied language here, we speculate that the perceptual and cognitive constraints leading to form-function regularities in music could be similar in kind to those underlying the strikingly robust form-function relations in speech worldwide [@Hilton2022a; @Sidhu2018; @Imai2014; @Blasi2016; @Cwiek2021].
+Moreover, the diversity and geographic breadth of stimuli used here helps to ensure the generalizability of the results [@Yarkoni2022]. That being said, while precautions were taken to avoid bias when constructing the stimulus set used here, we cannot fully rule out ethnographer bias in the selection and classification of songs therein. For example, it is possible that ethnographers tend to describe songs with functions that they themselves easily identify, or that they tend to record songs that resemble the songs of industrialised societies. This is a limitation of the study, as we cannot study what ethnographers did not record. This issue speaks to the essential nature of work preserving the cultural record of human history. Unfortunately, just as linguistic cultures can become endangered or lost [@Skirgard2023], so too can musical cultures.
 
-The finding that positive effects of culturally learned cues were detectable in our data — but only with fleeting effect sizes — provides further evidence that, at least at a basic level of listeners decoding the *functions* of singers' vocalisations, music operates in a fashion similar to these other communicative domains. We note, however, that significant cultural variability nevertheless still exists among cultures that share the same language family or geographic subregion; a stronger test of the role of culture in mediating the intelligibility of music would involve comparing performance on songs from one's *own* culture to those from distant cultures. More cross-cultural experiments, perhaps relying on music with obscured or masked lyrics (because linguistic content is a strong cue to behavioural context in music), may further explore the roles that culture plays in shaping music perception.
+A second limitation of our study is that the use of rating scales may have biased participants towards evaluating each song within a cultural framework that they may not share, and could have primed participants to interpret stimuli within given constraints [@Russell1994; @Russell1993]. As an alternative, the collection of free-response data (i.e., asking participants to generate their own list of behavioural contexts for a song, rather than choosing from prespecified options) would enable participants to express the full range of culture-specific interpretations of song. Indeed, related research on cross-cultural emotion recognition has shown that respondents identify more emotions in expressions in free-response paradigms [@Haidt1999; @Gendron2014b]; that the presence of an emotion word can influence whether that emotion is perceived in a face [@Gendron2012]; and that diverging from a typical forced-choice paradigm can reduce the recognition of emotion categories [@Crivelli2016]. In the present study, we opted to use a rating scale paradigm to avoid issues associated with forced-choice paradigms that present behavioural contexts as mutually exclusive categories (see, e.g., [@Gendron2018]), but repeating the paradigm with a free-text approach would be a productive direction for future work.
 
-One area of evident ambiguity in the data reported here is listeners' difficulty, in both cohorts, of recognizing when music was being used in the context of "expressing love for another person". Our previous studies have provided conflicting evidence for this ability, apparently varying as a function of the task design [with negative effects on a rating scale, @Mehr2018a; and small, but positive effects in a forced-choice task, @Mehr2019]. Perhaps love songs are a particularly fuzzy category of music when sung in an unfamiliar language. In the present results, despite not reliably identifying love songs, listeners did perform slightly better when listening to songs of higher linguistic or geographic proximity, suggesting that cultural familiarity can shape listeners' intuitions in ambiguous music. The widespread prevalence of love songs in modern popular music presents a puzzle, given this context, of potential interest to music researchers.
+What is the source of the cross-culturally robust musical inferences shown here? We consider the fact that effects were strongest for the contexts of dance and infant care to support theories that music evolved as a vocal signal in these specific contexts [@Hagen2003; @Hagen2009; @Mehr2017]. Music appears to function as a credible signal, in a similar fashion to the vocalisations produced and detected within and across many species [@Mehr2021].
 
-This work speaks to the idea that music is shaped by both biological predispositions as well as culture-specific nuances, building on a number of recent studies [@Mehr2018a; @Mehr2019; @Hilton2022a; @Hilton2022b; @Singhinpressa] and consistent with related findings in the domains of emotion [@Elfenbein2002; @Laukka2021] and language [@Hilton2022a; @Sidhu2018; @Imai2014; @Blasi2016; @Cwiek2021].
+The possibility of evolved perceptual mechanisms for musical communication is bolstered by comparisons to other domains, where such mechanisms are already well-established, such as the cross-cultural intelligibility of emotional expression in vocalizations [e.g., @Laukka2021; @Scherer2001], including across species [@Farago2014; @Kamiloglu2020; @Filippi2017], facial expressions [e.g., @Cowen2021], and non-referential information in music [@Balkwill1999; @Cowen2020; @Fritz2009; @Sievers2013]. Although we have not studied language here, we speculate that the perceptual and cognitive constraints leading to form-function regularities in music could be similar in kind to those underlying the robust form-function relations in speech worldwide [@Hilton2022a; @Sidhu2018; @Imai2014; @Blasi2016; @Cwiek2021].
+
+One area of evident ambiguity in the data reported here is listeners' difficulty, in both cohorts, of recognizing when music was being used in the context of expressing love for another person. Our previous studies have provided conflicting evidence for this ability, apparently varying as a function of the task design [with negative effects on a rating scale, @Mehr2018a; and small, but positive effects in a forced-choice task, @Mehr2019]. Here, using a rating scale paradigm, we do not find a significant effect for love songs, suggesting that the effect in ref. @Mehr2019 may have been a product of the forced-choice paradigm. These results further suggest that love songs are a fuzzy category of music when produced in an unfamiliar language. Despite not reliably identifying love songs, listeners did perform slightly better when listening to songs of higher linguistic or geographic proximity, suggesting that cultural familiarity can shape listeners' intuitions in ambiguous music. The widespread prevalence of love songs in modern popular music presents a puzzle, given this context, of potential interest to music researchers.
+
+The finding that positive effects of culturally learned cues were detectable in our data — but only with fleeting effect sizes — provides further evidence that, at least at a basic level of listeners decoding the functions of singers' vocalisations, music operates in a fashion similar to other communicative domains. That culture does not appear to explain much variation at the level of language families or geographic subregions suggests the patterns we see globally are likely cognitive universals rather than deeply inherited cultural traits. Nevertheless, significant cultural variability does exist among cultures that share the same language family or geographic subregion, and intuitively culture must matter to some degree; at the extreme, we expect a Hadza tribesman to do a better job of categorising Hadza songs than a non-Hadza. In other words, the proxies that we used here for cultural proximity may be too broad to capture shared cultural effects. It might be that relevant cultural information dissipates within a couple of centuries of independent evolution, such that being in the same language family (which are often thousands of years old) does not mean much. An interesting question is precisely how this effect of cultural knowledge tails off: does it persist across cultures that separated centuries ago, or does it rely on idiosyncrasies that are quickly lost, such that one needs to be from the same culture as a song to see any marked improvement in categorisation ability? A stronger test of the role of culture in mediating the intelligibility of music would involve comparing performance on songs from one's *own* culture to those from distant cultures. Cross-cultural experiments, perhaps relying on music with obscured or masked lyrics (because linguistic content is a strong cue to behavioural context in music), may further explore the roles that culture plays in shaping music perception.
+
+Another interesting question raised by our findings is whether certain song types could be swapped across cultures and still be functionally effective. We believe that the answer to this question is "yes", with an important caveat. The present research does not address many of the culture-specific effects of music that are arguably the most interesting: the simplistic "What's this song for"-style paradigm used here with four basic behavioural contexts cannot, of course, capture the myriad creative and functional ways that music is used around the world. It would strain credulity, for instance, to expect that naïve listeners could identify the "navigation songs" of some indigenous Australian societies [@Norris2014].
+
+However, certain more basic types of songs occur universally across human societies, these songs share characteristic musical features, and their features allow the songs to be mutually intelligible across cultural boundaries. In at least one case, lullabies, songs are demonstrably effective in a culture-independent fashion: when Western babies listened to the lullabies from the same corpus studied in this paper, they showed behavioural and physiological signs of relaxation [@Bainbridge2021]. Similarly, we suspect that readers of this manuscript might be moved to dance by the dance songs studied here. How music does and does not transcend languages and cultures is a promising topic for future work.
 
 # End notes {-}
 
 ## Data, code, and materials availability {-}
-A reproducible R Markdown manuscript is available at https://github.com/themusiclab/intelligible-music, with all associated data and materials. The same repository includes code for running the listener task in Qualtrics (for the industrialised societies) and E-Prime (for the smaller-scale societies), including translations of all experiments. This repository will be archived on Zenodo upon publication of this manuscript. The excerpted audio corpus (the Natural History of Song Discography) is available at https://doi.org/10.5281/zenodo.7265514.
+A reproducible R Markdown manuscript is available at https://github.com/themusiclab/universal-music, with all associated data and materials. The same repository includes code for running the listener task in Qualtrics (for the industrialised societies) and E-Prime (for the smaller-scale societies), including translations of all experiments. This repository will be archived on Zenodo upon publication of this manuscript. The excerpted audio corpus (the *Natural History of Song Discography*) is available at https://doi.org/10.5281/zenodo.7265514.
 
 ## Acknowledgments {-}
-This research was supported by the Harvard University Department of Psychology (M.M.K. and S.A.M.); the Harvard Data Science Initiative (S.A.M.); the National Institutes of Health Director's Early Independence Award DP5OD024566 (L.Y., C.B.H., and S.A.M.); the Institute for Advanced Study in Toulouse, under an Agence nationale de la recherche grant, Investissements d'Avenir ANR-17-EURE-0010 (M.S. and L.G.); and the Royal Society of New Zealand Te Aparangi Rutherford Discovery Fellowships RDF-UOA1101 (T.A.V. and Q.D.A.) and RDF-UOA2103 (S.A.M.). We thank the participants; J. Stieglitz and C. Scaff for their efforts at additional data collection; S. Atwood and C. Bainbridge for research assistance; and members of The Music Lab for feedback on the paper. 
+This research was supported by the Harvard University Department of Psychology (M.M.K. and S.A.M.); the Harvard Data Science Initiative (S.A.M.); the National Institutes of Health Director's Early Independence Award DP5OD024566 (L.Y., C.B.H., and S.A.M.); the Institute for Advanced Study in Toulouse, under an Agence Nationale de la Recherche grant, Investissements d'Avenir ANR-17-EURE-0010 (M.S. and L.G.); and the Royal Society of New Zealand Te Aparangi Rutherford Discovery Fellowships RDF-UOA1101 (T.A.V. and Q.D.A.) and RDF-UOA2103 (S.A.M.). We thank the participants; J. Stieglitz and C. Scaff for their efforts at additional data collection; S. Atwood and C. Bainbridge for research assistance; and the members of The Music Lab for feedback on the paper. 
 
 ## Author contributions {-}
 - S.A.M. and M.M.K. conceived of the research, hired and supervised research assistants, and coordinated the research team.
@@ -1103,108 +852,6 @@ This research was supported by the Harvard University Department of Psychology (
 - All authors edited the manuscript and approved it.
 
 \newpage
-
-# Supplementary Text {-}
-
-\setcounter{section}{1}
-## Deviations from the preregistration
-
-We preregistered the study in November 2017 at [https://osf.io/msvwz](https://osf.io/msvwz). The data collected and analyses reported deviate from the preregistration in five ways. 
-
-1. In the industrialised societies, we planned to collect data from 100 participants in each of 45 countries. Recruitment difficulties in some countries led us to increase the sampling range to include nearby countries where the same targeted language was also an official language. For instance, while we initially intended to recruit native speakers of English in Zambia, our sample from this region also included native speakers of English in nearby Namibia. This approach primarily affected African countries where internet access was limited relative to, e.g., the East Asian countries where we collected data via the same method.
-
-2. In the smaller-scale societies, we planned to collect data in six communities, but due to the COVID-19 pandemic, we were only able to collect data in three.
-
-3. For all participants, we planned the listening task to include 36 songs. This proved to be too long; in industrialised societies we shortened it to 24 songs, and in smaller-scale societies, to 18 songs.
-
-4. To further shorten the task in industrialised studies, we reduced the number of dimensions on which participants rated each song; we planned to use four distractor dimensions but included only two in the full sample. The two we omitted ("...to tell a story" and "...to mourn the dead") had previously been studied in [@Mehr2018a]. Participants in the smaller-scale societies completed all four distractor dimensions for each song, however.
-
-5. We planned to collect data concerning listeners' intuitions surrounding two forms of songs: the original, naturalistic recordings from the *Natural History of Song Discography* as well as artificially produced (i.e., synthesised) versions of the songs, created using transcriptions of them reported in [@Mehr2019]. Due to limitations on the amount of data we could collect, we obtained far less data on listeners' responses to the synthesised songs than the naturalistic recordings. As such, we leave those data for a future paper. Note that this decision limited the number of participants in smaller-scale societies reported here, as roughly half of the participants studied in those societies heard synthesised songs rather than the naturalistic recordings.
-
-## Replication of confirmatory analyses using mixed-effects models
-
-We replicated the main analyses of the industrialised society data using mixed-effects models with random intercepts for participant, song, and language. The results of these models conceptually replicated the simpler confirmatory analyses, but with slightly attenuated effect sizes.
-
-Taking into account the variance accounted for by participant, stimulus and language, dance songs were rated significantly above the base rate on the "...for dancing" scale ($\beta_{dance}$ = `r ran_mods$danc$danc$estimate %>% r2`, *SE* = `r ran_mods$danc$danc$std.error %>% r2`, *t*(`r ran_mods$danc$danc$df %>% r2`) = `r ran_mods$danc$danc$statistic %>% r2`, *p* `r ran_mods$danc$danc$p.value %>% fp`), and lullabies were rated significantly below the base rate ($\beta_{baby}$ = `r ran_mods$danc$baby$estimate %>% r2`, *SE* = `r ran_mods$danc$baby$std.error %>% r2`, *t*(`r ran_mods$danc$baby$df %>% r2`) = `r ran_mods$danc$baby$statistic %>% r2`, *p* `r ran_mods$danc$baby$p.value %>% fp`). On the "...to soothe a baby" scale, lullabies were rated highest ($\beta_{baby}$ = `r  ran_mods$baby$baby$estimate %>% r2`, *SE* = `r  ran_mods$baby$baby$std.error %>% r2`, *t*(`r  ran_mods$baby$baby$df %>% r2`) = `r  ran_mods$baby$baby$statistic %>% r2`, *p* `r  ran_mods$baby$baby$p.value %>% fp`), and dance songs lowest ($\beta_{dance}$ = `r  ran_mods$baby$danc$estimate %>% r2`, *SE* = `r ran_mods$baby$danc$std.error %>% r2`, *t*(`r ran_mods$baby$danc$df %>% r2`) = `r ran_mods$baby$danc$statistic %>% r2`, *p* `r ran_mods$baby$danc$p.value %>% fp`); as in the song-level analyses, healing songs were rated below the base rate ($\beta_{heal}$ = `r ran_mods$baby$heal$estimate %>% r2`, *SE* = `r ran_mods$baby$heal$std.error %>% r2`, *t*(`r ran_mods$baby$heal$df %>% r2`) = `r ran_mods$baby$heal$statistic %>% r2`, *p* `r ran_mods$baby$heal$p.value %>% fp`). On the "...to heal illness" scale, healing songs were rated higher than the base rate ($\beta_{heal}$ = `r ran_mods$heal$heal$estimate %>% r2`, *SE* = `r ran_mods$heal$heal$std.error %>% r2`, *t*(`r ran_mods$heal$heal$df %>% r2`) = `r ran_mods$heal$heal$statistic %>% r2`, *p* `r ran_mods$heal$heal$p.value %>% fp`), whereas dance songs were rated below it ($\beta_{dance}$ = `r ran_mods$heal$danc$estimate %>% r2`, *SE* = `r ran_mods$heal$danc$std.error %>% r2`, *t*(`r ran_mods$heal$danc$df %>% r2`) = `r ran_mods$heal$danc$statistic %>% r2`, *p* `r ran_mods$heal$danc$p.value %>% fp`). Last, as in the song-level analyses, love songs were not reliably identified as "...to express love for another person" (*p* > 0.05).
-
-```{r include=FALSE}
-# This chunk of code uses a previously generated bootstrapped dataset found in results/bootstrap_res.csv.
-# see analysis/bootstrap_analyses.R for details
-boot <- read.csv(here("results", "bootstrap_res.csv"))
-
-boot_cors <- boot %>% 
-  map(~ t.test(.x, mu = 0, alternative = "greater"))
-```
-
-\clearpage
-
-```{r figS1}
-#| fig.cap = "\\textbf{Figure S1 | Testing setup in smaller-scale societies.} The photo depicts author M.S. testing a Mentawai participant in Indonesia. In each of the smaller-scale societies, participants sat across from the experimenter, listened on headphones only, and entered their responses on a button box. The experimenter was unaware of the song being played on each trial and the participant could not see the laptop's screen."
-
-knitr::include_graphics(here("viz", "figS1.pdf"))
-```
-
-\clearpage
-```{r supplementary_fig2, fig.width=5, fig.height=5, fig.cap="\\textbf{Figure S2 | Bootstrapped correlations between song-wise ratings from the industrialised societies and the smaller-scale societies.} As an alternative to the simple correlations across cohort types, reported in the main text, we computed distributions of correlations via stratified bootstrapping. This approach helps to account for large differences in sample sizes between the cohorts and provides a principled estimate of the variability in each correlation coefficient. We sampled 30 observations per song from each cohort, generated new song-wise averages, and correlated these averages across both cohorts. This procedure was repeated 10,000 times. The plots show the four distributions correlations; in all four cases, the correlations were significantly larger than 0, but they varied in magnitude across behavioural contexts."}
-
-average_boots <- boot %>% summarise(across(everything(), ~ mean(.x)))
-
-# Plotting function
-boot_plot <- function(x_var, color_var, title_var, annotation_var) {
-  p <- ggplot(boot, aes(x = {{x_var}})) + 
-    geom_histogram(aes(y = stat(density)), 
-                   alpha = 0.4,
-                   colour = color_var,
-                   fill = color_var,
-                   bins = 100) + 
-    geom_density() +
-    geom_vline(xintercept = 0,
-               linetype = "dashed", size = 0.6, alpha = .5) + 
-    labs(title = title_var,
-         x= "Correlation Coefficients", y = "Density") +
-    lims(x = c(-0.2,1), y = c(0, 15)) +
-    theme_classic() +
-    theme(text = element_text(size=9,  family = "serif"),
-          axis.text.x = element_text(size = 8),
-          plot.title = element_markdown(size = 9))
-
-  max_density <- ggplot_build(p)$data[[2]]$density %>% max
-  
-  p + annotate("text", size=3, label = glue("mean r = {annotation_var %>% r2}"), family= "serif", 
-               x = annotation_var, y = max_density + 1)
-}
-
-danc_hist <- boot_plot(boot$danc, color_scheme[1], "<i style='color:#000000;'>\"...for dancing\"</i>", average_boots$danc)
-heal_hist <- boot_plot(boot$heal, color_scheme[2], "<i style='color:#000000;'>\"...to heal illness\"</i>", average_boots$heal)
-love_hist <- boot_plot(boot$love, color_scheme[3], "<i style='color:#000000;'>\"...to express love for<br>another person\"</i>", average_boots$love)
-baby_hist <- boot_plot(boot$baby, color_scheme[4], "<i style='color:#000000;'>\"...to soothe a baby\"</i>", average_boots$baby)
-
-danc_hist + heal_hist + love_hist + baby_hist + 
-  plot_layout(ncol = 2)
-
-```
-
-\clearpage
-```{r tableS1, echo=FALSE}
-read.csv(here("viz", "superadditive_stats.csv")) %>% 
-  kable(.,
-        format = "latex",
-        booktabs = TRUE,
-        col.names = c(" ","Estimate","Std. Error","df","t value","p value")) %>% 
-  kable_styling(font_size = 7.5,
-                full_width = FALSE) %>%
-  pack_rows("Dance songs", 1, 4) %>%
-  pack_rows("Lullabies", 5, 8) %>% 
-  pack_rows("Healing Songs", 9, 12) %>% 
-  pack_rows("Love Songs", 13, 16) %>% 
-  footnote(general = "To test for a super-additive effect of linguistic and geographic proximity, we regressed the target behavioural context ratings (on their relevant  dimension) onto two binary variables: language family (shared vs. different) and geographic subregion (shared vs. different), with random intercepts for participant and song. After including both language family and geographic subregion in the regression, sharing a language predicted higher ratings for dance songs only. Geographic proximity was associated with higher ratings on the appropriate dimensions for lullabies and dance songs. Super-additivity would be indicated by a significant interaction between the effect of linguistic and geographic proximity, such that the effect of sharing a geographic region depends on whether the listener is also more familiar with the language of the song. However, the interaction between the two variables was not significant for any of the four behavioural contexts.",
-           general_title = "Table S1",
-           footnote_as_chunk = TRUE,
-           title_format = "bold",
-           escape = FALSE,
-           threeparttable = TRUE)
-```
-
 \clearpage
 
 # References

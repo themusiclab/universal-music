@@ -1,4 +1,4 @@
-**This repository is currently under construction post-revision. We will remove this warning when all materials are up-to-date.**
+**This repository is currently under construction. We will remove this warning when all materials are up-to-date.**
 
 # Universal interpretations of vocal music
 

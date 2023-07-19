@@ -1,0 +1,551 @@
+---
+bibliography: themusiclab.bib
+csl: pnas.csl
+header-includes:
+- \usepackage[left]{lineno}
+- \usepackage{ragged2e}
+- \usepackage{caption}
+- \usepackage{longtable}
+- \usepackage[labelformat = empty]{caption}
+- \usepackage{afterpage}
+- \usepackage{mdframed}
+- \usepackage{fontenc}
+- \usepackage{soul}
+- \usepackage{xcolor}
+- \usepackage[symbol]{footmisc}
+- \definecolor{bleu}{HTML}{2200cc}
+- \renewcommand{\thefootnote}{\fnsymbol{footnote}}
+- \usepackage{rotating}
+notes-after-punctuation: no
+urlcolor: bleu
+linkcolor: bleu
+link-citations: yes
+output:
+  pdf_document:
+    number_sections: yes
+  word_document:
+  html_document:
+    df_print: paged
+---
+
+```{r chunk_knit_settings, include=F}
+
+set.seed(42)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, cache.extra = knitr::rand_seed, dependencies = c("kableExtra"))
+options(scipen = 999) # disable scientific notation
+
+```
+```{r libraries}
+
+# note, make sure {plyr} is installed: install.packages("plyr")
+
+library(pacman)
+p_load(
+  here,
+  nlme,
+  lme4,
+  multcomp,
+  RColorBrewer,
+  lmerTest,
+  gt,
+  scales,
+  ggpubr,
+  geodist,
+  cowplot,
+  patchwork,
+  ggsignif,
+  broom,
+  broom.mixed,
+  glmnet,
+  ggeffects,
+  ggtext,
+  ggnewscale,
+  glue,
+  rgeos,
+  rnaturalearth,
+  rnaturalearthdata,
+  sf,
+  tidyverse,
+  kableExtra,
+  factoextra,
+  tidymodels
+)
+
+color_scheme <- c("#6f9acc", "#f27553", "#fccc54", "#44bb74")
+
+load(here("results", "analysis.RData"))
+load(here("results", "lasso_analyses.RData"))
+
+```
+
+```{r convenience_functions}
+# functions for formatting stats in .rmd knit
+
+# rounds to 1 decimal place and adds percent sign
+p <- function(num) {percent(num, accuracy=.1)}
+
+# rounds to 2 or 3 decimal places
+r2 <- function(num) {format(round(num, 2), nsmall = 2)}
+r3 <- function(num) {format(round(num, 3), nsmall = 3)}
+
+# format p-values
+fp <- function(num) {
+  if (num < .0001) {
+    return("< .0001")
+  } else if (num < .001) {
+    return("< .001")
+  } else if (num < .01) {
+    return(paste0("= ", round(num, digits = 3)))
+  } else {
+    return(paste0("= ", round(num, digits = 2)))
+  }
+}
+
+f <- function(num) {format(num, big.mark = ",")}
+
+```
+
+
+\raggedright
+\LARGE
+\textbf{Supplementary Materials for "Universal interpretations of vocal music"}
+
+\vspace{0.1in}
+
+\justifying
+\normalsize
+Lidya Yurdum^1,2,$\ast$^, Manvir Singh^3^, Luke Glowacki^4^, Tom Vardy^5^, Quentin D. Atkinson^5^, Courtney B. Hilton^5^, Disa Sauter^2^, Max M. Krasnow^6^, \& Samuel A. Mehr^1,5,$\ast$^
+
+\small
+^1^Child Study Center, Yale University, New Haven, CT 06520, USA.  
+^2^Department of Psychology, University of Amsterdam, Amsterdam 1018WT, Netherlands.  
+^3^Institute for Advanced Study in Toulouse, 31080 Toulouse Cedex 6, France.  
+^4^Department of Anthropology, Boston University, Boston, MA 02215, USA.  
+^5^School of Psychology, University of Auckland, Auckland 1010, New Zealand.  
+^6^Division of Continuing Education, Harvard University, Cambridge, MA 02138, USA.  
+
+\*Corresponding authors. E-mail: [lidya.yurdum\@yale.edu](mailto:lidya.yurdum@yale.edu){.email}, [sam\@auckland.ac.nz](mailto:sam@auckland.ac.nz){.email}
+
+\bigskip
+
+
+\setcounter{section}{1}
+
+## Deviations from the preregistration
+
+We preregistered the study in November 2017 at [https://osf.io/msvwz](https://osf.io/msvwz). The data collected and analyses reported deviate from the preregistration in five ways. 
+
+1. In the industrialised societies, we planned to collect data from 100 participants in each of 45 countries. Recruitment difficulties in some countries led us to increase the sampling range to include nearby countries where the same targeted language was also an official language. For instance, while we initially intended to recruit native speakers of English in Zambia, our sample from this region also included native speakers of English in nearby Namibia. This approach primarily affected African countries where internet access was limited relative to, e.g., the East Asian countries where we collected data via the same method.
+
+2. In the smaller-scale societies, we planned to collect data in six communities, but due to the COVID-19 pandemic, we were only able to collect data in three.
+
+3. For all participants, we planned the listening task to include 36 songs. This proved to be too long; in industrialised societies we shortened it to 24 songs, and in smaller-scale societies, to 18 songs.
+
+4. To further shorten the task in industrialised societies, we reduced the number of dimensions on which participants rated each song; we planned to use four distractor dimensions but included only two in the full sample. The two we omitted ("...to tell a story" and "...to mourn the dead") had previously been studied in ref. @Mehr2018a. Participants in the smaller-scale societies completed all four distractor dimensions for each song, however.
+
+5. We planned to collect data concerning listeners' intuitions surrounding two forms of songs: the original, naturalistic recordings from the *Natural History of Song Discography* as well as artificially produced (i.e., synthesised) versions of the songs, created using transcriptions of them reported in ref. @Mehr2019. Due to limitations on the amount of data we could collect, we obtained far less data on listeners' responses to the synthesised songs than the naturalistic recordings. As such, we leave those data for a future paper. Note that this decision limited the number of participants in smaller-scale societies reported here, as roughly half of the participants studied in those societies heard synthesised songs rather than the naturalistic recordings.
+
+## Replication of confirmatory analyses using mixed-effects models
+
+We replicated the main analyses of the industrialised society data using mixed-effects models with random intercepts for participant, song, and language. The results of these models conceptually replicated the simpler confirmatory analyses, but with slightly attenuated effect sizes.
+
+Taking into account the variance accounted for by participant, stimulus and language, dance songs were rated significantly above the base rate on the "...for dancing" dimension ($\beta$ = `r ran_mods$danc$danc$estimate %>% r2`, *SE* = `r ran_mods$danc$danc$std.error %>% r2`, *t*(`r ran_mods$danc$danc$df %>% r2`) = `r ran_mods$danc$danc$statistic %>% r2`, *p* `r ran_mods$danc$danc$p.value %>% fp`), and lullabies were rated significantly below the base rate ($\beta$ = `r ran_mods$danc$baby$estimate %>% r2`, *SE* = `r ran_mods$danc$baby$std.error %>% r2`, *t*(`r ran_mods$danc$baby$df %>% r2`) = `r ran_mods$danc$baby$statistic %>% r2`, *p* `r ran_mods$danc$baby$p.value %>% fp`). On the "...to soothe a baby" dimension, lullabies were rated highest ($\beta$ = `r  ran_mods$baby$baby$estimate %>% r2`, *SE* = `r  ran_mods$baby$baby$std.error %>% r2`, *t*(`r  ran_mods$baby$baby$df %>% r2`) = `r  ran_mods$baby$baby$statistic %>% r2`, *p* `r  ran_mods$baby$baby$p.value %>% fp`), and dance songs lowest ($\beta$ = `r  ran_mods$baby$danc$estimate %>% r2`, *SE* = `r ran_mods$baby$danc$std.error %>% r2`, *t*(`r ran_mods$baby$danc$df %>% r2`) = `r ran_mods$baby$danc$statistic %>% r2`, *p* `r ran_mods$baby$danc$p.value %>% fp`); as in the song-level analyses, healing songs were rated below the base rate ($\beta$ = `r ran_mods$baby$heal$estimate %>% r2`, *SE* = `r ran_mods$baby$heal$std.error %>% r2`, *t*(`r ran_mods$baby$heal$df %>% r2`) = `r ran_mods$baby$heal$statistic %>% r2`, *p* `r ran_mods$baby$heal$p.value %>% fp`). On the "...to heal illness" dimension, healing songs were rated higher than the base rate ($\beta$ = `r ran_mods$heal$heal$estimate %>% r2`, *SE* = `r ran_mods$heal$heal$std.error %>% r2`, *t*(`r ran_mods$heal$heal$df %>% r2`) = `r ran_mods$heal$heal$statistic %>% r2`, *p* `r ran_mods$heal$heal$p.value %>% fp`), whereas dance songs were rated below it ($\beta$ = `r ran_mods$heal$danc$estimate %>% r2`, *SE* = `r ran_mods$heal$danc$std.error %>% r2`, *t*(`r ran_mods$heal$danc$df %>% r2`) = `r ran_mods$heal$danc$statistic %>% r2`, *p* `r ran_mods$heal$danc$p.value %>% fp`). Last, as in the song-level analyses, love songs were not reliably identified as "...to express love for another person" (*p* > 0.05).
+
+## Principal Components Analysis
+
+To test whether the four behavioural context dimensions we used have distinct latent underpinnings, we conducted a principal components analysis using song-wise averages on the four dimensions, for both cohorts separately. Since the analysis is summarising only four dimensions, we present the loadings and eigenvalues for all four resulting components in Table S2 (n.b., as sign direction in principal components analysis is arbitrary, we reversed the loadings in the smaller-scale cohort for easier comparison to the industrialised society results). 
+
+In both cohorts, the first component loaded highly on "...for dancing" and low on "...to soothe a baby", capturing a latent behavioural context we could interpret as "inducing arousal". Plotting the four song types in principal components space shows that dance songs and lullabies are indeed most clearly distinguished along this first component, while healing songs are distinguished by the second component (Figure S2). 
+
+We then tested whether a given component differentiated the four song types. To do this, we calculated each of the four components' loadings, for each song, for the two cohorts separately. We then regressed each of the four components onto song type as a categorical predictor, with the intercept fixed at zero. This is equivalent to testing which of the four song types differ significantly from zero on a given component.
+
+In both cohorts, the loadings for the first three components differed significantly based on song type. Lullabies' and dance songs' loadings both differed from zero on component 1: dance songs loaded positively on this dimension ($\beta$ = `r mods$pc1$coef$danc$estimate %>% r2`, *SE* = `r mods$pc1$coef$danc$std.error %>% r3`, $p$ `r mods$pc1$coef$danc$p.value %>% fp`), while lullabies loaded negatively ($\beta$ = `r mods$pc1$coef$baby$estimate %>% r2`, *SE* = `r mods$pc1$coef$baby$std.error %>% r3`, $p$ `r mods$pc1$coef$baby$p.value %>% fp`). Component 2 characterised healing songs and lullabies: healing songs loaded positively on this component ($\beta$ = `r mods$pc2$coef$heal$estimate %>% r2`, *SE* = `r mods$pc2$coef$heal$std.error %>% r3`, $p$ `r mods$pc2$coef$heal$p.value %>% fp`), while lullabies loaded negatively ($\beta$ = `r mods$pc2$coef$baby$estimate %>% r2`, *SE* = `r mods$pc2$coef$baby$std.error %>% r3`, $p$ `r mods$pc2$coef$baby$p.value %>% fp`). Component 3 differentiated lullabies and love songs, with love songs loading positively on this component ($\beta$ = `r mods$pc3$coef$love$estimate %>% r2`, *SE* = `r mods$pc3$coef$love$std.error %>% r3`, $p$ `r mods$pc3$coef$love$p.value %>% fp`), and lullabies loading negatively ($\beta$ = `r mods$pc3$coef$baby$estimate %>% r2`, *SE* = `r mods$pc3$coef$baby$std.error %>% r3`, $p$ `r mods$pc3$coef$baby$p.value %>% fp`).
+
+Similarly, in the smaller-scale society cohort, component 1 also differentiated lullabies and dance songs: dance songs loaded positively on this dimension ($\beta$ = `r mods$pc1_field$coef$danc$estimate %>% r2`, *SE* = `r mods$pc1_field$coef$danc$std.error %>% r3`, $p$ `r mods$pc1_field$coef$danc$p.value %>% fp`), while lullabies loaded negatively ($\beta$ = `r mods$pc1_field$coef$baby$estimate %>% r2`, *SE* = `r mods$pc1_field$coef$baby$std.error %>% r3`, $p$ `r mods$pc1_field$coef$baby$p.value %>% fp`). Once again, component 2 differentiated healing songs ($\beta$ = `r mods$pc2_field$coef$heal$estimate %>% r2`, *SE* = `r mods$pc2_field$coef$heal$std.error %>% r3`, $p$ `r mods$pc2_field$coef$heal$p.value %>% fp`) and lullabies ($\beta$ = `r mods$pc2_field$coef$baby$estimate %>% r2`, *SE* = `r mods$pc2_field$coef$baby$std.error %>% r3`, $p$ `r mods$pc2_field$coef$baby$p.value %>% fp`). In contrast to the industrialised societies, the third component in the smaller-scale cohort did not differentiate any of the song types. 
+
+
+## Sampling variation in cross-cohort correlations
+
+In smaller-scale societies, each song excerpt was rated by fewer listeners than in industrialised societies. This sampling noise limits the explainable variance in our data and is likely to bias the cross-cohort correlations reported in Figure 3a downwards [@Csardi2015; @Spearman1987]. In line with an anonymous reviewer's suggestion, we compensated for this bias with a noise ceiling metric, as described in @Cowen2020a, estimated for each cohort's ratings on each dimensions using the equation below:
+
+
+$$ \sqrt{1 - \frac{mean\text{(squared SE per song on a given rating dimension)}}{var(\text{mean score per song on a given rating dimension})}}  $$
+
+The correlation noise ceilings for the industrialised society cohort were close to 1, which is to be expected given the large number of ratings per song: `r r3(sqrt(1 - mean(webdat$se_baby^2)/var(webdat$mean_baby)))` for the "... to soothe a baby" dimension, `r r3(sqrt(1 - mean(webdat$se_danc^2)/var(webdat$mean_danc)))` for "... for dancing", `r r3(sqrt(1 - mean(webdat$se_heal^2)/var(webdat$mean_heal)))` for "... to heal illness", and `r r3(sqrt(1 - mean(webdat$se_love^2)/var(webdat$mean_love)))` for "... to express love for another person".
+
+The noise ceilings for the smaller-scale societies were lower, reflecting the fact that we had fewer observations per song in the smaller-scale societies and that the ratings were on a 3-point scale rather than 4-point. The estimated noise ceilings for the four behavioural context dimensions were `r r3(sqrt(1 - (mean(fielddat$se_baby^2))/(var(fielddat$mean_baby))))` for soothing a baby, `r r3(sqrt(1 - (mean(fielddat$se_danc^2))/(var(fielddat$mean_danc))))` for dancing, `r r3(sqrt(1 - (mean(fielddat$se_heal^2))/(var(fielddat$mean_heal))))` to heal illness, and `r r3(sqrt(1 - (mean(fielddat$se_love^2))/(var(fielddat$mean_love))))` to express love. 
+
+We then normalised the cross-cultural correlations by the noise ceiling estimates, accounting for the estimated maximum explainable variance in each cohort's ratings [@Cowen2019]. Note that the higher the noise ceiling, the smaller the adjustment to the observed correlation will be, and conversely, smaller noise ceilings will result in more dramatic adjustments. Because the noise ceiling estimates were especially low for the healing and expressing love contexts in the smaller-scale society cohorts, we opted to make a more conservative adjustment by using the average of the two cohorts' noise ceilings, instead of normalising for each ceiling independently. (Using the average of two noise ceilings will always result in a more conservative adjustment than correcting for both ceilings independently.) 
+
+To adjust for this bias, we divided the correlations for each of the four behavioural contexts by the average noise ceiling in the two cohorts on that dimension, resulting in $r_{dancing}$ = `r r3(cors$danc$estimate/mean(c(sqrt(1 - mean(webdat$se_danc^2)/var(webdat$mean_danc)),(sqrt(1 - mean(fielddat$se_danc^2)/var(fielddat$mean_danc))))))`, $r_{soothing}$ = `r r3(cors$baby$estimate/mean(c(sqrt(1 - mean(webdat$se_baby^2)/var(webdat$mean_baby)),(sqrt(1 - mean(fielddat$se_baby^2)/var(fielddat$mean_baby))))))`, $r_{healing}$ = `r r3(cors$heal$estimate/mean(c(sqrt(1 - mean(webdat$se_heal^2)/var(webdat$mean_heal)),(sqrt(1 - mean(fielddat$se_heal^2)/var(fielddat$mean_heal))))))`, and $r_{love}$ = `r r3(cors$love$estimate/mean(c(sqrt(1 - mean(webdat$se_love^2)/var(webdat$mean_love)),(sqrt(1 - mean(fielddat$se_love^2)/var(fielddat$mean_love))))))` (corresponding to the unadjusted correlations reported in Figure 3a). While less biased, these scores still likely underestimate the true correlations, given the noisiness of the small-scale cohort stimuli-level ratings. (n.b., The larger sampling variability in the smaller-scale cohorts is an issue specific to the stimuli-level estimates of the ratings on each behavioural context dimension; the main comparisons reported at the level of the four behavioural contexts are still adequately powered.)
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# I ran this code with n=10000 iterations and stored the results in results/bootstrap_res.csv. To save time when knitting, the chunk of code that produced this file will be skipped, and values will be read in from the saved document. However, the relevant code that produced the values in bootstrap_res.csv can be found below, for reproducibility. 
+
+# USED FOR DANCING
+# loop n times and store all correlation coefficients in vector
+danc_cors <- c()
+for (i in 1:n) {
+  danc_cors[i] <- boot(fulldata, "danc")
+}
+
+danc_cors <- data.frame(danc_cors)
+
+# USED FOR SOOTHING A BABY
+# loop n times and store all correlation coefficients in vector
+baby_cors <- c()
+for (i in 1:n) {
+  baby_cors[i] <- boot(fulldata, "baby")
+}
+
+baby_cors <- data.frame(baby_cors)
+
+# USED FOR HEALING THE SICK
+# loop n times and store all correlation coefficients in vector
+heal_cors <- c()
+for (i in 1:n) {
+  heal_cors[i] <- boot(fulldata, "heal")
+}
+
+heal_cors <- data.frame(heal_cors)
+
+
+# USED FOR EXPRESSING LOVE
+# loop n times and store all correlation coefficients in vector
+love_cors <- c()
+for (i in 1:n) {
+  love_cors[i] <- boot(fulldata, "love")
+}
+
+love_cors <- data.frame(love_cors)
+
+```
+
+## Acoustic Correlates of Musical Function Inferences
+
+In previous work using the same corpus we demonstrated the consistency and distinctiveness with which musical features characterise dance songs, healing songs and lullabies worldwide [@Mehr2018a; @Mehr2019], as well as listeners' subjective ratings of their behavioural contexts [@Hilton2022b]. Here, we analysed which musical features were predictive of listeners' inferences for each song. This analysis differs from our prior work in refs. @Mehr2018a and @Mehr2019 where we focused on the musical features associated with the actual songs, rather than listener inferences. It also complements our work in ref. @Hilton2022b, which tested the influence of musical features on listener inferences in an English-speaking, Internet-connected sample using a citizen science approach and forced-choice task. Although we ran this analysis for the industrialised and smaller-scale society cohorts separately, we note that our sample size was much smaller in the smaller-scale cohort, and that this cohort also provided ratings on a 3-point scale (rather than 4), further reducing the sensitivity of their data. As such, we focused mostly on the results from the industrialised cohort.
+
+Following the same procedure reported in ref. @Hilton2022b, we started with an initial set of 36 musical features, consisting of annotations from expert musicians and variables derived from the transcriptions of the songs. We then z-scored these variables. For each cohort separately, we used Least Absolute Shrinkage and Selection Operator (LASSO) regularization [@Friedman2016] to select a smaller subset of the full 36 features that were most relevant to each behavioural context dimension (dancing, soothing a baby, healing illness; given the overall "fuzziness" of love songs and our listeners' difficulty identifying them, we did not include ratings on this dimension in the analysis). Each model predicted the average listener ratings on a given dimension for each of the 118 songs and was trained with 10-fold cross-validation. Finally, we discarded resulting model coefficients below a threshold of .02, leaving us with a simpler, more conservative set of features that were most predictive of listeners' behavioural context ratings (see Table S3 for the list of selected musical features and their definitions). We then combined the smaller subset of features selected for the two cohorts into one pooled set for each behavioural context. Perhaps unsurprisingly, given the noisier data, the LASSO model did not pick out any features that predicted ratings on the "...to heal illness" dimension for the smaller-scale society cohort. Last, we regressed listeners' ratings on each dimension onto this group of features. The results are reported in Table S4.
+
+A variety of musical features were predictive of listeners' ratings on the behavioural context dimensions, as in previous work [@Hilton2022b], and many of these features were the same ones that universally characterise dance songs, lullabies and healing songs. For example, dance songs and lullabies are universally differentiated by the prevalence of accents and the songs' tempo [@Mehr2019] and both of these features guided listeners' ratings on the "...for dancing" and "...to soothe a baby" dimensions in the present data (Table S4). Similarly, a consistent metric structure is associated with dance songs globally [@Mehr2019] and this feature predicted listener ratings on the "...for dancing" dimension. We also found that tempo and consistency in macrometer, which characterised healing songs, guided our participants' inferences on the "...to heal illness" dimension. 
+
+In sum, we find evidence that the acoustic forms of a song reliably predicted listeners' interpretations of that song, and the specific musical features at work tended to be those that universally characterised the songs found globally in each behavioural context.
+
+\clearpage
+
+```{r figS1}
+#| fig.cap = "\\textbf{Figure S1 | Testing setup in smaller-scale societies.} The photo depicts author M.S. testing a Mentawai participant in Indonesia. In each of the smaller-scale societies, participants sat across from the experimenter, listened on headphones only, and entered their responses on a button box. The experimenter was unaware of the song being played on each trial and the participant could not see the laptop's screen."
+
+knitr::include_graphics(here("viz", "figS1.pdf"))
+```
+
+```{r echo=FALSE, fig.cap="\\textbf{Figure S2 | The principal components space of listener interpretations.} We ran two separate principal components analyses to summarise the four behavioural context dimensions with a smaller number of latent dimensions. In both cohorts, dance songs and lullabies were clearly differentiated along the first component, which loaded positively on \\``...for dancing\\'' and negatively on \\``...to soothe a baby\\''. In both cohorts, healing songs loaded positively on the second component. The principal component scores for each song are depicted by the dots; colours indicate the song type. The circles denote the 95% confidence interval.", warning=FALSE, fig.height=6}
+# plot results
+group.colors <- c(danc= "#6f9acc", heal = "#f27553", love="#fccc54", baby = "#44bb74")
+
+predicted_web <- predict(pca_res,tmp) %>% 
+  as.data.frame() %>%
+  rownames_to_column("song") %>%
+  separate(song,c("type")) 
+
+predicted_field <- predict(pca_res_field,tmp)  %>% 
+  as.data.frame %>%
+  rownames_to_column("song") %>%
+  separate(song,c("type")) 
+
+predicted <- bind_rows("Industrialised" = predicted_web, "Smaller-scale" = predicted_field, .id = "Cohort")
+
+predicted %>% 
+  mutate(across(contains("PC"), ~ scale(.x)[,1]), .by = "Cohort") |>
+  ggplot(aes(x=PC1,y=PC2, color = type)) +
+  geom_point() +
+  scale_color_manual(values=group.colors,name = " ", labels = c("Lullaby", "Dancing", "Healing","Love"))+
+  stat_ellipse()+
+  labs(x=paste0("PC1"),
+       y=paste0("PC2"))+
+  theme(legend.position="top",
+        text = element_text(size=9)) +
+  theme_classic() +
+  coord_fixed() +
+  facet_grid(Cohort~.) +
+  guides(colour = guide_legend(override.aes = list(size = 6,shape = 15))) + 
+  theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+
+#### field plot
+
+
+# field_pca_plot <- predicted_field %>% 
+#   ggplot(aes(x=PC1,y=PC2, color = type)) +
+#   geom_point() +
+#   scale_color_manual(values=group.colors)+
+#   stat_ellipse()+
+#   labs(x=paste0("PC1: ",round(var_explained[1]*100,1),"%"),
+#        y=paste0("PC2: ",round(var_explained[2]*100,1),"%"))+
+#   theme(legend.position="top") +
+#   theme_classic()
+
+```
+
+\clearpage
+```{r supplementary_fig3, fig.width=5, fig.height=5, fig.cap="\\textbf{Figure S3 | Bootstrapped correlations between song-wise ratings from the industrialised societies and the smaller-scale societies.} As an alternative to correlations across cohorts reported in the main text, we computed distributions of correlations via stratified bootstrapping. This approach helps to account for large differences in sample sizes between the cohorts and provides a principled estimate of the variability in each correlation coefficient. We sampled 30 observations per song from each cohort, generated new song-wise averages, and correlated these averages across both cohorts. This procedure was repeated 10,000 times. The plots show the four distributions correlations; in all four cases, the correlations were significantly larger than 0, but they varied in magnitude across behavioural contexts."}
+
+average_boots <- boot %>% summarise(across(everything(), ~ mean(.x)))
+
+# Plotting function
+boot_plot <- function(x_var, color_var, title_var, annotation_var) {
+  p <- ggplot(boot, aes(x = {{x_var}})) + 
+    geom_histogram(aes(y = stat(density)), 
+                   alpha = 0.4,
+                   colour = color_var,
+                   fill = color_var,
+                   bins = 100) + 
+    geom_density() +
+    geom_vline(xintercept = 0, # aes(xintercept = mean({{x_var}})) 
+               linetype = "dashed", size = 0.6, alpha = .5) + 
+    labs(title = title_var,
+         x= "Correlation Coefficients", y = "Density") +
+    lims(x = c(-0.2,1), y = c(0, 15)) +
+    theme_classic() +
+    theme(text = element_text(size=9),
+          axis.text.x = element_text(size = 8),
+          plot.title = element_text(size =9, face = "italic"))
+
+  max_density <- ggplot_build(p)$data[[2]]$density %>% max
+  
+  p + annotate("text", size=3, label = glue("mean r = {annotation_var %>% r2}"), 
+               x = annotation_var, y = max_density + 1)
+}
+
+danc_hist <- boot_plot(danc_cors, color_scheme[1], "''...for dancing''", average_boots$danc_cors)
+heal_hist <- boot_plot(heal_cors, color_scheme[2], "''...to heal illness''", average_boots$heal_cors)
+love_hist <- boot_plot(love_cors, color_scheme[3], "''...to express love for another person''", average_boots$love_cors)
+baby_hist <- boot_plot(baby_cors, color_scheme[4], "''...to soothe a baby''", average_boots$baby_cors)
+
+danc_hist + heal_hist + love_hist + baby_hist + 
+  plot_layout(ncol = 2)
+
+```
+
+\clearpage
+```{r tableS1, echo=FALSE}
+read.csv(here("viz", "superadditive_stats.csv")) %>% 
+  kable(.,
+        format = "latex",
+        booktabs = TRUE,
+        col.names = c(" ","Estimate","Std. Error","df","t value","p value")) %>% 
+  kable_styling(font_size = 7.5,
+                full_width = FALSE) %>%
+  pack_rows("Dance songs", 1, 4) %>%
+  pack_rows("Lullabies", 5, 8) %>% 
+  pack_rows("Healing Songs", 9, 12) %>% 
+  pack_rows("Love Songs", 13, 16) %>% 
+  footnote(general = "To test for a super-additive effect of linguistic and geographic proximity, we regressed the target behavioural context ratings (on their relevant  dimension) onto two binary variables: language family (shared vs. different) and geographic subregion (shared vs. different), with random intercepts for participant and song. After including both language family and geographic subregion in the regression, sharing a language predicted higher ratings for dance songs only. Geographic proximity was associated with higher ratings on the appropriate dimensions for lullabies and dance songs. Super-additivity would be indicated by a significant interaction between the effect of linguistic and geographic proximity, such that the effect of sharing a geographic region depends on whether the listener is also more familiar with the language of the song. However, the interaction between the two variables was not significant for any of the four behavioural contexts.",
+           general_title = "Table S1",
+           footnote_as_chunk = TRUE,
+           title_format = "bold",
+           escape = FALSE,
+           threeparttable = TRUE) %>% 
+  row_spec(0,bold=TRUE) 
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# PCA table for industrialised societies
+eigenvalues_web <- as.data.frame(t(as.data.frame(get_eigenvalue(pca_res)[c(1,2)])))%>% 
+  rename(PC1 = Dim.1,
+         PC2 = Dim.2,
+         PC3 = Dim.3,
+         PC4 = Dim.4)
+rotations_web <- as.data.frame(pca_res$rotation) 
+pca_web <- bind_rows(" " = as.data.frame(eigenvalues_web), "Loadings" = rotations_web) %>% 
+  mutate_if(is.numeric, r2) %>% 
+  rownames_to_column("value") %>% 
+  mutate(across(starts_with("PC"), 
+               ~ifelse(value == "variance.percent", paste0(round(as.numeric(.x),0),"%"), .x), 
+               .names = '{col}'))
+
+# PCA table for smaller-scale societies
+eigenvalues_field <- as.data.frame(t(as.data.frame(get_eigenvalue(pca_res_field)[c(1,2)])))%>% 
+  rename(PC1 = Dim.1,
+         PC2 = Dim.2,
+         PC3 = Dim.3,
+         PC4 = Dim.4)
+rotations_field <- as.data.frame(pca_res_field$rotation) 
+pca_field <- bind_rows(" " = as.data.frame(eigenvalues_field), "Loadings" = rotations_field) %>% 
+  mutate_if(is.numeric, r2) %>% 
+  rownames_to_column("value")%>% 
+  mutate(across(starts_with("PC"), 
+               ~ifelse(value == "variance.percent", paste0(round(as.numeric(.x),0),"%"), .x), 
+               .names = '{col}'))
+
+
+pca_table <- bind_rows("Industrialised Societies" = pca_web, "Smaller-scale Societies" = pca_field) %>% 
+  mutate(value = case_when(value == "eigenvalue" ~ "Eigenvalues",
+                            value == "variance.percent" ~ "Explained Variance",
+                            value == "mean_danc" ~"... for dancing",
+                            value == "mean_baby" ~ "... to soothe a baby",
+                            value == "mean_heal" ~"... to heal illness",
+                            value == "mean_love" ~ "... to express love for another person")) 
+
+
+pca_table %>% 
+  kable(.,
+        format = "latex",
+        booktabs = TRUE,
+        col.names = c("","PC1","PC2","PC3","PC4")) %>% 
+  kable_styling(font_size = 7.5,
+                full_width = FALSE) %>%
+  pack_rows("Industrialised Societies", 1, 2, background = "#D3D3D3") %>%
+  pack_rows("Loadings", 3,6) %>%
+  pack_rows("Smaller-Scale Societies", 7, 8, background = "#D3D3D3") %>% 
+  pack_rows("Loadings", 9,12) %>% 
+  footnote(general = "We ran two principal component analyses, one for each cohort, using the mean ratings for each song on the four behavioural context dimensions. We reversed the signs of the loadings in the smaller-scale society cohort to match those of the industrialised cohort. In the industrialised cohort, the first two components explained 90 percent of the observed variance. The first component loads highly on ``...for dancing'' and low on ``...to soothe a baby'', and captures something comparable to arousal. In the smaller-scale society cohort, the first three components explained over 90 percent of the variance. Again, the first component loaded positively on ``...for dancing'' and negatively on ``...to soothe a baby''.",
+           general_title = "Table S2.",
+           footnote_as_chunk = TRUE,
+           title_format = "bold",
+           escape = FALSE,
+           threeparttable = TRUE) %>% 
+  row_spec(0,bold=TRUE) 
+```
+
+\clearpage
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+read.csv(here("viz", "feature_table_new.csv")) %>% 
+  kable(.,
+        format = "latex",
+        longtable = TRUE,
+        booktabs = TRUE,
+        col.names = c("Source","Feature","Definition","Variable Name", "Behavioural Context")) %>%
+  kable_styling(font_size = 7,
+                full_width = TRUE,
+                latex_options = c("hold_position", "repeat_header")) %>% 
+  footnote(general = "Musical features selected by the LASSO procedure. We derived these features from Transcription and Expert Annotation datasets from Mehr et al. (2019; denoted by the ``Source'' column). The original names of the variables used in the analyses are noted in the ``Variable Name'' column. The ``Behavioural context'' column indicates which of the three behavioural context ratings the feature was selected for.",
+           general_title = "Table S3.",
+           footnote_as_chunk = TRUE,
+           title_format = "bold",
+           escape = FALSE,
+           threeparttable = TRUE) %>% 
+  row_spec(c(0,1,13),bold=TRUE) %>% 
+  column_spec(1, width = "6em") %>%
+  column_spec(c(2,5), width = "6em") %>% 
+  column_spec(4, width = "14em") %>% 
+  column_spec(3, width = "20em") %>% 
+  collapse_rows(columns = 1, valign = "top")
+  
+
+
+```
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+## old feature table
+read.csv(here("viz", "feature_table.csv")) %>% 
+  dplyr::select(-Source) %>% 
+  kable(.,
+        format = "latex",
+        longtable = TRUE,
+        booktabs = TRUE,
+        col.names = c("Feature","Definition","Variable Name", "Behavioural Context","Cohort")) %>%
+  kable_styling(font_size = 7,
+                full_width = TRUE,
+                latex_options = c("hold_position", "repeat_header")) %>% 
+  footnote(general = "Musical features selected by the LASSO procedure. We derived these features from Transcription and Expert Annotation datasets from Mehr et al. (2019; denoted by the 'Source' column). That original names of the variables used in the analyses are noted in the 'Variable Name' column. The 'Behavioural context' column indicates which of the three behavioural context dimensions the feature was selected for. The 'Cohort' column indicates which of the two cohorts the feature was selected for (although all features selected for a given behavioural context were pooled in the subsequent regression analyses).",
+           general_title = "Table S3.",
+           footnote_as_chunk = TRUE,
+           title_format = "bold",
+           escape = FALSE,
+           threeparttable = TRUE) %>% 
+  row_spec(0,bold=TRUE) %>% 
+  pack_rows("Expert Annotations", 1, 19)%>% 
+  pack_rows("Transcription", 20, 38)%>% 
+  column_spec(c(1,4,5), width = "8em") %>% 
+  column_spec(3, width = "14em") %>% 
+  column_spec(2, width = "42em") %>% 
+  collapse_rows(columns = 1:3, valign = "top") %>% 
+  landscape()
+  
+
+
+```
+
+\clearpage
+
+```{r table s4, echo=FALSE}
+
+webdanc <- reg_results$danc$web %>% 
+  filter(p.value < 0.05) %>% 
+  mutate(type="...for dancing",
+         cohort = "Industrialised")
+fielddanc <- reg_results$danc$field %>% 
+  filter(p.value < 0.05)%>% 
+  mutate(type="...for dancing",
+         cohort = "Smaller-scale")
+webbaby <- reg_results$baby$web %>% 
+  filter(p.value < 0.05)%>% 
+  mutate(type="...to soothe a baby",
+         cohort = "Industrialised")
+fieldbaby <- reg_results$baby$field %>% 
+  filter(p.value < 0.05)%>% 
+  mutate(type="...to soothe a baby",
+         cohort = "Smaller-scale")
+webheal <- reg_results$heal$web %>% 
+  filter(p.value < 0.05)%>% 
+  mutate(type="...to heal illness",
+         cohort = "Industrialised")
+fieldheal <- reg_results$heal$field %>% 
+  filter(p.value < 0.05)%>% 
+  mutate(type="...to heal illness",
+         cohort = "Smaller-scale")
+
+bind_rows(webdanc, fielddanc, webbaby, fieldbaby, webheal,fieldheal) %>% 
+  mutate(across(estimate:statistic, ~r2(.x))) %>% 
+  mutate(p.value = case_when(p.value < .0001 ~ "< .0001",
+                             p.value < .001 ~ "< .001",
+                             p.value < .05 ~ paste0("= ", (round(p.value, digits = 3))))) %>% 
+  mutate(term = case_when(term =="melodic_thirds" ~ "Melodic thirds",
+                          term == "accent" ~ "Accent",
+                          term == "tempo_adj" ~ "Tempo (adjusted)",
+                          term == "macrometer_ord" ~ "Macrometer consistency",
+                          term == "tension" ~ "Tension",
+                          term == "amount_of_arpeggiation" ~ "Amount of arpeggiation",
+                          term == "vibrato" ~ "Vibrato present",
+                          term == "micrometer_triple" ~ "Triple rhythm",
+                          term == "ornament" ~ "Ornamentation",
+                          term == "average_note_duration" ~ "Average note duration",
+                          term == "modal_pitchcls_prev" ~ "Prevalence of modal pitch class",
+                          term == "rel_strength_modal_intervals" ~ "Relative strength of most-common intervals",
+                          term == "quality" ~ "Mode of transcription",
+                          TRUE ~ term)) %>% 
+  dplyr::select(type, cohort, everything()) %>%
+  kable(.,
+        format = "latex",
+        booktabs = TRUE,
+        col.names = c("Behavioural Context",
+                      "Cohort",
+                      "Feature",
+                      "Estimate",
+                      "Standard Error",
+                      "Statistic",
+                      "p value"),
+        longtable = TRUE) %>% 
+  row_spec(0,bold=TRUE) %>% 
+  kable_styling(font_size = 7,
+                full_width = FALSE,
+                latex_options = c("hold_position", "repeat_header")) %>%
+  collapse_rows(columns=c(1,2)) %>% 
+  footnote(general = "The musical features that influence ratings on each of the three behavioural context dimensions. We first selected a smaller subset of all musical features using LASSO for each cohort, and then regressed the ratings for each dimension onto the (pooled) selected features. For brevity, we report only the features that were predictive of listener ratings, and their directions.",
+           general_title = "Table S4",
+           footnote_as_chunk = TRUE,
+           title_format = "bold",
+           escape = FALSE,
+           threeparttable = TRUE)
+```
+
+
+\clearpage
+
+# References
