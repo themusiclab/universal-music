@@ -116,7 +116,7 @@ Lidya Yurdum^1,2,$\ast$^, Manvir Singh^3^, Luke Glowacki^4^, Thomas Vardy^5^, Qu
 \small
 ^1^Child Study Center, Yale University, New Haven, CT 06520, USA.  
 ^2^Department of Psychology, University of Amsterdam, Amsterdam 1018WT, Netherlands.  
-^3^Institute for Advanced Study in Toulouse, 31080 Toulouse Cedex 6, France.  
+^3^Department of Anthropology, University of California, Davis, Davis CA 95616.  
 ^4^Department of Anthropology, Boston University, Boston, MA 02215, USA.  
 ^5^School of Psychology, University of Auckland, Auckland 1010, New Zealand.  
 ^6^Division of Continuing Education, Harvard University, Cambridge, MA 02138, USA.  
@@ -128,7 +128,7 @@ Lidya Yurdum^1,2,$\ast$^, Manvir Singh^3^, Luke Glowacki^4^, Thomas Vardy^5^, Qu
 ```{=tex}
 \normalsize
 \begin{mdframed}[backgroundcolor=gray!20]
-Despite the variability of music across cultures, some types of human songs share acoustic characteristics. For example, dance songs tend to be loud and rhythmic and lullabies tend to be quiet and melodious. Human perceptual sensitivity to the behavioural contexts of songs, on the basis of these musical features, raises the possibility that basic properties of music are mutually intelligible, independent of linguistic or cultural content. Whether these effects reflect universal interpretations of vocal music, however, is unclear, because prior studies focus almost exclusively on English-speaking participants, a group that is not representative of humans writ large. Here we report shared intuitions concerning the behavioural contexts of unfamiliar songs produced in unfamiliar languages, in participants living in Internet-connected industrialised societies ($n = 5,516$ native speakers of 28 languages) or smaller-scale societies with limited access to global media ($n = 116$ native speakers of 3 non-English languages). Participants listened to songs randomly selected from a representative sample of human vocal music, originally used in four behavioural contexts, and rated the degree to which they believed the song was used for each context. Listeners in both industrialised and smaller-scale societies reliably inferred the contexts of dance songs, lullabies, and healing songs, but not love songs. Within and across the cohorts, inferences were mutually consistent. Further, increased linguistic or geographical proximity between listeners and singers only minimally increased the accuracy of the inferences. These results demonstrate that the behavioural contexts of three common forms of music are mutually intelligible across cultures and imply that musical diversity, shaped by cultural evolution, is nonetheless grounded in some universal perceptual phenomena.
+Despite the variability of music across cultures, some types of human songs share acoustic characteristics. For example, dance songs tend to be loud and rhythmic and lullabies tend to be quiet and melodious. Human perceptual sensitivity to the behavioural contexts of songs, based on these musical features, suggests that basic properties of music are mutually intelligible, independent of linguistic or cultural content. Whether these effects reflect universal interpretations of vocal music, however, is unclear, because prior studies focus almost exclusively on English-speaking participants, a group that is not representative of humans. Here we report shared intuitions concerning the behavioural contexts of unfamiliar songs produced in unfamiliar languages, in participants living in Internet-connected industrialised societies ($n = 5,516$ native speakers of 28 languages) or smaller-scale societies with limited access to global media ($n = 116$ native speakers of 3 non-English languages). Participants listened to songs randomly selected from a representative sample of human vocal music, originally used in four behavioural contexts, and rated the degree to which they believed the song was used for each context. Listeners in both industrialised and smaller-scale societies inferred the contexts of dance songs, lullabies, and healing songs, but not love songs. Within and across the cohorts, inferences were mutually consistent. Further, increased linguistic or geographical proximity between listeners and singers only minimally increased the accuracy of the inferences. These results demonstrate that the behavioural contexts of three common forms of music are mutually intelligible cross-culturally and imply that musical diversity, shaped by cultural evolution, is nonetheless grounded in some universal perceptual phenomena.
 
 \textbf{Keywords:} music, cross-cultural, universality, form, function, cultural evolution
 \end{mdframed}
@@ -137,7 +137,7 @@ Despite the variability of music across cultures, some types of human songs shar
 \linenumbers
 \bigskip
 
-Like many other animals, humans use vocalisations to convey their intentions and affective states [@Morton1977; @Pisanski2022]. Such vocalisations would be meaningless in a world where members of one's own — or other — species could not interpret these signals in a useful way. Indeed, many animal and human vocalisations are not arbitrary but instead display systematic relationships between their acoustic form and their behavioural function [@Endler1993; @Fitch2002; @Pisanski2022]. For instance, the human scream is unlikely to have evolved arbitrarily as a means of communicating distress and urgency: rather, a scream involves extreme high frequencies [@Pisanski2020] and acoustic roughness [@Arnal2015] that set it apart from regular verbal communication, and make it appropriate for the behavioural function of grabbing attention. 
+Like many other animals, humans use vocalisations to convey their intentions and affective states [@Morton1977; @Pisanski2022]. Such vocalisations would be meaningless if members of one's own species, or members of other species, could not interpret them in a useful way. Indeed, many animal and human vocalisations are not arbitrary but instead display systematic relationships between their acoustic form and their behavioural function [@Endler1993; @Fitch2002; @Pisanski2022]. For instance, the human scream is unlikely to have evolved arbitrarily as a means of communicating distress and urgency: rather, a scream involves extreme high frequencies [@Pisanski2020] and acoustic roughness [@Arnal2015] that set it apart from regular verbal communication, and make it appropriate for the behavioural function of grabbing attention. 
 
 Such form-function relationships in human vocalisations allow listeners to infer a range of information about others, such as intention [@Bryant2007], emotion [@Barrett2008; @Laukka2021], and physical prowess [@Raine2019; @Sell2010]. Form-function relationships in vocalisations even appear to be preserved across species: for instance, humans can infer the behavioural context and affect of chimpanzee vocalisations [@Kamiloglu2020], and deer mothers are sensitive to the distress calls of a variety of mammals [@Lingle2014].
 
@@ -189,7 +189,7 @@ kable(manual_table1,
   row_spec(c(7,9,12,49,50,51,53,55), hline_after = TRUE) %>%
   kable_styling(font_size = 8,
                 full_width = FALSE) %>%
-  kableExtra::footnote(general = "Linguistic and geographic information about the participants in the web-experiment. The ``Language'' column denotes the native language spoken by the participant (and the language they completed the experiment in); the ``Total n'' column denotes the number of participants recruited for that language; the ``Language Family'' column denotes the language family this particular language is part of, as per the Glottolog system (40). Glottolog is a comprehensive catalogue of the world's languages and their genealogy, and can be accessed at https://glottolog.org. Within each language, participants were recruited from multiple countries, as noted in the ``Country'' column. For the cultural proximity analyses, participants were then grouped into geographic subregions based on their reported location, as per the Human Relations Area Files World Sub-region typology. The ``Country-wise n'' column indicates the number of participants per language in each country.",
+  kableExtra::footnote(general = "Linguistic and geographic information about the participants in the web-experiment. The ``Language'' column denotes the native language spoken by the participant (and the language they completed the experiment in); the ``Total n'' column denotes the number of participants recruited in that language; the ``Language Family'' column denotes the language family each language is part of, following the Glottolog system (41). Glottolog is a comprehensive catalogue of the world's languages and their genealogy, and can be accessed at https://glottolog.org. Within each language, participants were recruited from multiple countries, as noted in the ``Country'' column. For the cultural proximity analyses, participants were grouped into geographic subregions based on their reported location, following typology used by the Human Relations Area Files. The ``Country-wise n'' column indicates the number of participants per language in each country.",
            general_title = "Table 1.",
            footnote_as_chunk = TRUE,
            title_format = "bold",
@@ -251,13 +251,14 @@ coords <- read_csv(here("data", "coords.csv")) %>%
 
 ggplot(ne_countries(scale = "medium", returnclass = "sf") %>%
   filter(iso_a3 != "ATA")) +
-  geom_sf(fill = "grey80", color = "grey70", lwd = .1) +
+  geom_sf(fill = "grey80", color = "grey90", lwd = .1) +
   geom_sf(
     data = web_data,
     aes(geometry = geometry),
-    size = 0.3,
+    size = 1,
     alpha = 0.1,
-    color = "black"
+    color = "black", 
+    pch=16
   ) +
   geom_sf(
     data = coords,
@@ -682,7 +683,7 @@ Having found a number of similarities across the intuitions of listeners worldwi
 
 If culture-specific musical "rules" explain differences in a given song from the worldwide "norm" for songs in a given behavioural context (i.e., leading to variability in listener intuitions in the effects reported above) then one might expect clear relations between cultural familiarity and listener accuracy. Specifically, when listeners hear songs from cultures that are more similar to theirs, their intuitions about behavioural context in a song should more closely match that song's actual behavioural context.
 
-To operationalise this hypothesis, we used two measures of cultural proximity between listener and song: linguistic and geographic distance. Phylogenetic distance between languages is often used to model cultural transmission of behaviours, such as linguistic features [@Dunn2011], vocalisation styles [@Hilton2022a], or camel-herding practices [@Mace1994]. Research on the universality of emotional facial expressions, for instance, has found that cross-cultural emotion recognition is higher when the judge's native language is closer to that of the poser [@Scherer2001]. 
+To operationalise this hypothesis, we used two measures of cultural proximity between listener and song: linguistic and geographic distance. Phylogenetic distance between languages is often used to model cultural transmission of behaviours, such as linguistic features [@Dunn2011], vocalisation styles [@Hilton2022a], or camel-herding practices [@Mace1994]. Research on the universality of non-verbal expressions of emotion, for instance, has found that cross-cultural emotion recognition is higher when the judge's native language is closer to that of the poser [@Scherer2001]. 
 
 Complementing the linguistic-distance approach, we also used geographical distance as a proxy for cultural distance and between-group exposure, as physical distance may predict cultural similarity [@Elfenbein2002; @Wood2016]. We used Glottolog [@Hammarstrom2019] to classify local languages into language families and the Human Relations Area Files ([http://ehrafworldcultures.yale.edu](http://ehrafworldcultures.yale.edu/)) World Sub-region typology to classify geographic location for each culture, as in previous research [@Mehr2019].
 
@@ -832,7 +833,7 @@ However, certain more basic types of songs occur universally across human societ
 # End notes {-}
 
 ## Data, code, and materials availability {-}
-A reproducible R Markdown manuscript is available at https://github.com/themusiclab/universal-music, with all associated data and materials. The same repository includes code for running the listener task in Qualtrics (for the industrialised societies) and E-Prime (for the smaller-scale societies), including translations of all experiments. This repository will be archived on Zenodo upon publication of this manuscript. The excerpted audio corpus (the *Natural History of Song Discography*) is available at https://doi.org/10.5281/zenodo.7265514.
+A reproducible R Markdown manuscript is available at https://github.com/themusiclab/universal-music, with all associated data and materials. The same repository includes code for running the listener task in Qualtrics (for the industrialised societies) and E-Prime (for the smaller-scale societies), including translations of all experiments. The excerpted audio corpus (the *Natural History of Song Discography*) is available at https://doi.org/10.5281/zenodo.7265514.
 
 ## Acknowledgments {-}
 This research was supported by the Harvard University Department of Psychology (M.M.K. and S.A.M.); the Harvard Data Science Initiative (S.A.M.); the National Institutes of Health Director's Early Independence Award DP5OD024566 (L.Y., C.B.H., and S.A.M.); the Institute for Advanced Study in Toulouse, under an Agence Nationale de la Recherche grant, Investissements d'Avenir ANR-17-EURE-0010 (M.S. and L.G.); and the Royal Society of New Zealand Te Aparangi Rutherford Discovery Fellowships RDF-UOA1101 (T.A.V. and Q.D.A.) and RDF-UOA2103 (S.A.M.). We thank the participants; J. Stieglitz and C. Scaff for their efforts at additional data collection; S. Atwood and C. Bainbridge for research assistance; and the members of The Music Lab for feedback on the paper. 

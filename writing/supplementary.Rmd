@@ -116,8 +116,8 @@ Lidya Yurdum^1,2,$\ast$^, Manvir Singh^3^, Luke Glowacki^4^, Tom Vardy^5^, Quent
 \small
 ^1^Child Study Center, Yale University, New Haven, CT 06520, USA.  
 ^2^Department of Psychology, University of Amsterdam, Amsterdam 1018WT, Netherlands.  
-^3^Institute for Advanced Study in Toulouse, 31080 Toulouse Cedex 6, France.  
-^4^Department of Anthropology, Boston University, Boston, MA 02215, USA.  
+^3^Department of Anthropology, University of California, Davis, Davis CA 95616.  
+^4^Department of Anthropology, Boston University, Boston, MA 02215, USA.    
 ^5^School of Psychology, University of Auckland, Auckland 1010, New Zealand.  
 ^6^Division of Continuing Education, Harvard University, Cambridge, MA 02138, USA.  
 
