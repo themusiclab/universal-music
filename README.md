@@ -1,6 +1,6 @@
 # Universal interpretations of vocal music
 
-This is the repository for Yurdum et al. "Universal interpretations of vocal music" (2023, PNAS). The manuscript is publicly available at https://psyarxiv.com/4kdx6.
+This is the repository for Yurdum et al. "Universal interpretations of vocal music" (2023, PNAS). The manuscript is open-access at https://www.pnas.org/doi/10.1073/pnas.2218593120.
 
 You can find the following here:
 
